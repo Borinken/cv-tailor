@@ -174,6 +174,18 @@ sentences past 45 words, and the share of bullets carrying a concrete number —
 the one metric that correlates with a CV reading as written by a person who did
 the work.
 
+### A linter for the mistake that actually happens
+
+`node --check` validates syntax, which is not the failure mode of a single-page
+app edited in large blocks: deleting a function leaves valid JavaScript that
+throws at load and renders a blank editor. It happened twice here.
+
+`herramientas/revisar_js.py` lists every function called and every function
+defined, and fails CI on the difference. Getting it to be quiet about real code
+meant writing a proper single-pass stripper for comments and strings — three
+sequential regexes let one apostrophe inside a string swallow a hundred lines,
+which is precisely the class of bug it was written to catch.
+
 ### Page count is measured, not estimated
 
 "Fit in two pages" is verified by rendering the real PDF and counting its pages,
@@ -261,6 +273,7 @@ On macOS, double-clicking `arrancar.command` does the same thing.
 
 ```
 servidor.py            HTTP server, rendering, PDF, prompts, job ingestion
+herramientas/          checks run in CI (see revisar_js.py)
 web/                   single-page UI (no framework, no build)
   ├── index.html
   ├── app.js           editor, dashboard, adaptation flow

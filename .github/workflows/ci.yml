@@ -27,6 +27,9 @@ jobs:
           node --check web/app.js
           node --check web/marcador.js
 
+      - name: No JS function is called but missing
+        run: python3 herramientas/revisar_js.py
+
       - name: Sample profile is valid JSON
         run: python -c "import json; json.load(open('cv_base.ejemplo.json'))"
 

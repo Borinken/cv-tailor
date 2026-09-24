@@ -900,6 +900,82 @@ $("#btnAnadirEx").onclick = async () => {
   $("#btnAnadirEx").disabled = false;
 };
 
+/* ---------------------------------------------------------------- perfiles */
+let perfiles = [];
+
+function pintarPerfiles() {
+  const sel = $("#selPerfil");
+  sel.textContent = "";
+  perfiles.forEach((p) => {
+    const op = crear("option", { value: p.slug, textContent: p.nombre });
+    if (p.activo) op.selected = true;
+    sel.append(op);
+  });
+  $("#btnBorrarPerfil").disabled = perfiles.length <= 1;
+}
+
+async function cargarPerfiles() {
+  perfiles = await api("/api/perfiles");
+  pintarPerfiles();
+}
+
+$("#selPerfil").onchange = async () => {
+  const r = await api("/api/usar-perfil", { slug: $("#selPerfil").value });
+  cv = r.cv;
+  cv.secciones_ocultas = cv.secciones_ocultas || [];
+  cv.estilo = Object.assign({ color: "#4A76B8", tamano: 10, foto: true, plantilla: "cape_town", ats: false },
+    cv.estilo || {});
+  await cargarPerfiles();
+  pintarEditor(); pintarDiseno(); pintarIdioma(); refrescar();
+};
+
+$("#btnNuevoPerfil").onclick = async () => {
+  const nombre = prompt("Nombre del perfil nuevo (ej.: Desarrollo, Soporte, Hostelería):",
+    "Perfil " + (perfiles.length + 1));
+  if (!nombre) return;
+  const r = await api("/api/guardar-perfil", { nombre, cv });
+  perfiles = r.perfiles;
+  pintarPerfiles();
+  $("#btnNuevoPerfil").textContent = "Creado ✓";
+  setTimeout(() => ($("#btnNuevoPerfil").textContent = "+ Perfil"), 1800);
+};
+
+$("#btnBorrarPerfil").onclick = async () => {
+  const actual = perfiles.find((p) => p.activo) || perfiles[0];
+  if (!confirm("¿Borro el perfil «" + actual.nombre + "»? El CV que contiene se pierde.")) return;
+  const r = await api("/api/borrar-perfil", { slug: actual.slug });
+  perfiles = r.perfiles;
+  pintarPerfiles();
+  $("#selPerfil").onchange();
+};
+
+/* ---------------------------------------------------------------- idioma */
+function pintarIdioma() {
+  const en = cv.idioma === "en";
+  $("#btnEn").classList.toggle("activa", en);
+  $("#btnEs").classList.toggle("activa", !en);
+}
+
+async function cambiarIdioma(idioma) {
+  if ((cv.idioma || "es") === idioma) return;
+  const aviso = idioma === "en"
+    ? "Voy a traducir el CV y la carta al inglés. Tarda un par de minutos. ¿Sigo?"
+    : "Voy a traducirlo todo al español. ¿Sigo?";
+  if (!confirm(aviso)) return;
+  const nodo = $("#estadoAdaptar");
+  document.querySelector('.pest[data-tab="adaptar"]').click();
+  try {
+    const r = await conEstado(nodo, "Traduciendo el CV y la carta…",
+      () => api("/api/traducir", { cv, carta, idioma }));
+    cv = r.cv; carta = r.carta || carta;
+    pintarEditor(); pintarDiseno(); pintarCarta(); pintarIdioma(); refrescar();
+    nodo.className = "estado ok";
+    nodo.textContent = idioma === "en" ? "Traducido. Revísalo antes de enviarlo." : "Vuelto al español.";
+  } catch (e) { /* el estado ya lo dice */ }
+}
+$("#btnEn").onclick = () => cambiarIdioma("en");
+$("#btnEs").onclick = () => cambiarIdioma("es");
+
 $("#btnPdfCV").onclick = () => descargar("cv");
 $("#btnPdfCarta").onclick = () => descargar("carta");
 $("#btnGuardarBase").onclick = async () => {
