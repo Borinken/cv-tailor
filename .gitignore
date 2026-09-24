@@ -1,0 +1,14 @@
+# Personal data — never publish
+cv_base.json
+perfiles/
+ajustes.json
+salidas/
+datos/*
+!datos/.gitkeep
+
+# Local noise
+__pycache__/
+*.pyc
+*.bak_*
+.DS_Store
+.remember/

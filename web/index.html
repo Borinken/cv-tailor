@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adaptador de CV</title>
+<link rel="stylesheet" href="/web/estilos.css">
+</head>
+<body>
+<header class="barra">
+  <div class="marca">Adaptador de CV <span id="estadoIA" class="pill pill-gris">IA sin probar</span></div>
+  <nav class="vistas">
+    <button class="vbtn activa" data-vista-principal="panel">Panel</button>
+    <button class="vbtn" data-vista-principal="editor">Editor del CV</button>
+  </nav>
+  <div class="acciones" id="acciones-editor">
+    <span class="perfil-caja">
+      <select id="selPerfil" title="Perfil del CV"></select>
+      <button id="btnNuevoPerfil" class="btn-mini" title="Duplicar este CV como un perfil nuevo">+ Perfil</button>
+      <button id="btnBorrarPerfil" class="btn-mini" title="Borrar este perfil">🗑</button>
+    </span>
+    <span class="idiomas-cv">
+      <button id="btnEs" class="vbtn activa">Español</button>
+      <button id="btnEn" class="vbtn">English</button>
+    </span>
+    <button id="btnProbar" class="btn btn-plano">Probar IA</button>
+    <button id="btnGuardarBase" class="btn btn-plano">Guardar en este perfil</button>
+    <button id="btnPdfCV" class="btn">Descargar CV (PDF)</button>
+    <button id="btnPdfCarta" class="btn">Descargar carta (PDF)</button>
+    <button id="btnGuardarCand" class="btn btn-oscuro">Guardar candidatura</button>
+  </div>
+</header>
+
+<main id="panel">
+  <header class="panel-cab">
+    <div>
+      <h1>Tu búsqueda de empleo</h1>
+      <p id="saludo" class="ayuda"></p>
+    </div>
+    <button id="btnNuevaBusqueda" class="btn">Buscar ofertas</button>
+  </header>
+
+  <section class="kpis">
+    <div class="kpi" data-tono="azul"><span class="ico">🔎</span><b id="n-nuevas">—</b><span>ofertas encontradas</span></div>
+    <div class="kpi" data-tono="gris"><span class="ico">📄</span><b id="n-preparadas">—</b><span>preparadas</span></div>
+    <div class="kpi" data-tono="verde"><span class="ico">📤</span><b id="n-enviadas">—</b><span>enviadas</span></div>
+    <div class="kpi" data-tono="ambar"><span class="ico">💬</span><b id="n-respuestas">—</b><span>con respuesta</span></div>
+  </section>
+
+  <section class="tarjeta bloque-busqueda">
+    <div class="cabeza-seccion">
+      <h3>Trabajos de esta semana</h3>
+      <span class="ayuda">Solo lo publicado dentro del plazo que elijas.</span>
+    </div>
+
+    <div class="barra-busqueda">
+      <span class="campo"><span class="lupa">🔎</span>
+        <input id="bu-texto" placeholder="desarrollador, java, backend…"></span>
+      <span class="campo"><span class="lupa">📍</span>
+        <input id="bu-lugar" placeholder="Málaga"></span>
+      <span class="segmentos" id="bu-plazo">
+        <button data-dias="1">24 h</button>
+        <button data-dias="3">3 días</button>
+        <button data-dias="7" class="activa">7 días</button>
+      </span>
+      <button id="btnBuscar" class="btn">Buscar</button>
+    </div>
+
+    <div class="chips-fuente">
+      <button class="chip-f activa" data-fuente="linkedin">LinkedIn</button>
+      <button class="chip-f activa" data-fuente="tecnoempleo">Tecnoempleo</button>
+      <button class="chip-f activa" data-fuente="navegador">Infojobs (por marcador)</button>
+      <details class="acordeon acordeon-fino comoinfo">
+        <summary>¿Cómo traigo las de Infojobs?</summary>
+        <div class="interior">
+          <p class="ayuda">Infojobs bloquea la lectura automática. Arrastra este botón a la barra de
+            marcadores (una vez). Luego buscas en Infojobs, filtras por fecha allí, y lo pulsas:
+            manda la lista a este panel.</p>
+          <p><a class="btn marcador" href="#">📋 Enviar ofertas al Adaptador</a></p>
+          <p class="ayuda">Infojobs no deja que su web hable con tu ordenador, así que ahí el marcador
+            te las copia. Después pulsa este botón:</p>
+          <p><button id="btnPegarOfertas" class="btn-mini">Pegar ofertas copiadas</button>
+             <span id="estadoPegar" class="estado"></span></p>
+        </div>
+      </details>
+    </div>
+
+    <p id="estadoBuscar" class="estado"></p>
+    <div id="ofertas" class="ofertas"></div>
+  </section>
+
+  <section class="tarjeta">
+    <div class="cabeza-seccion">
+      <h3>Trabajos aplicados</h3>
+      <span class="segmentos peq" id="filtro-estado">
+        <button data-estado="" class="activa">Todas</button>
+        <button data-estado="preparada">Preparadas</button>
+        <button data-estado="enviada">Enviadas</button>
+        <button data-estado="respondida">Con respuesta</button>
+      </span>
+    </div>
+    <div id="aplicados" class="aplicados"></div>
+  </section>
+</main>
+
+<main id="editor" class="columnas" hidden>
+  <section class="panel">
+    <nav class="pestanas">
+      <button class="pest activa" data-tab="contenido">Contenido</button>
+      <button class="pest" data-tab="adaptar">Adaptar al empleo</button>
+      <button class="pest" data-tab="diseno">Diseño</button>
+      <button class="pest" data-tab="enviar">Enviar</button>
+    </nav>
+
+    <div id="tab-contenido" class="tab activa"></div>
+
+    <div id="tab-adaptar" class="tab">
+      <div class="tarjeta">
+        <h3>La oferta</h3>
+        <label>Pega el enlace (LinkedIn, Infojobs…) y lo traigo solo
+          <span class="fila">
+            <input id="of-url" placeholder="https://www.linkedin.com/jobs/view/…">
+            <button id="btnTraer" class="btn">Traer</button>
+          </span>
+        </label>
+        <p id="estadoUrl" class="estado"></p>
+        <details class="acordeon acordeon-fino">
+          <summary>Infojobs y otras webs que bloquean → botón de marcador</summary>
+          <div class="interior">
+            <p class="ayuda">Arrastra este botón a la barra de marcadores del navegador (una sola vez).
+              Cuando estés viendo una oferta, lo pulsas y la manda aquí sola.</p>
+            <p><a class="btn marcador" href="#">📋 Enviar oferta al Adaptador</a></p>
+            <p class="ayuda">Si no ves la barra de marcadores: Cmd+Mayús+B en Chrome.</p>
+          </div>
+        </details>
+        <div class="rejilla2">
+          <label>Empresa<input id="of-empresa" placeholder="ox:gen"></label>
+          <label>Puesto<input id="of-puesto" placeholder="Java Developer"></label>
+        </div>
+        <div class="rejilla2">
+          <label>Dónde la viste<input id="of-fuente" placeholder="LinkedIn"></label>
+          <label>Idioma del CV
+            <select id="of-idioma">
+              <option value="auto">El de la oferta</option>
+              <option value="es">Español</option>
+              <option value="en">Inglés</option>
+            </select>
+          </label>
+        </div>
+        <label>Texto de la oferta (pégalo entero)
+          <textarea id="of-texto" rows="9" placeholder="Pega aquí la descripción del puesto, requisitos, tecnologías…"></textarea>
+        </label>
+        <label>Notas tuyas (opcional)
+          <input id="of-notas" placeholder="Ej.: disponibilidad inmediata, interés por el sector salud">
+        </label>
+        <button id="btnAdaptar" class="btn btn-oscuro ancho">Adaptar CV y escribir carta</button>
+        <p id="estadoAdaptar" class="estado"></p>
+        <p id="enfoque" class="enfoque"></p>
+        <button id="btnManual" class="enlace">¿La IA no responde? Hazlo a mano →</button>
+        <div id="manual" hidden>
+          <p class="ayuda">Sin login ni API: copias la instrucción, se la pegas al Claude que ya tienes
+            abierto, y pegas aquí su respuesta.</p>
+          <button id="btnCopiar" class="btn ancho">1 · Copiar instrucción</button>
+          <label>2 · Pega aquí lo que te responda Claude
+            <textarea id="respuestaIA" rows="6" placeholder="{ ... }"></textarea>
+          </label>
+          <button id="btnAplicar" class="btn btn-oscuro ancho">3 · Aplicar respuesta</button>
+          <p id="estadoManual" class="estado"></p>
+        </div>
+      </div>
+
+      <div class="tarjeta" id="cajaRequisitos" hidden>
+        <h3>Lo que busca el reclutador</h3>
+        <div id="requisitos" class="requisitos"></div>
+      </div>
+
+      <div class="tarjeta" id="cajaSugerencias" hidden>
+        <h3>Te falta esto — ¿lo tienes?</h3>
+        <p class="ayuda">Si la respuesta es sí, pulsa «Lo tengo» y lo añadimos redactado.
+          Si no lo has hecho, déjalo fuera.</p>
+        <div id="sugerencias"></div>
+      </div>
+
+      <div class="tarjeta">
+        <h3>Me falta experiencia para esta oferta</h3>
+        <p class="ayuda">Cuéntalo con tus palabras. La IA lo redacta en el estilo del CV y lo añade donde digas.
+          Solo escribe cosas que hayas hecho de verdad.</p>
+        <label>¿Dónde lo añado?
+          <select id="ex-destino"></select>
+        </label>
+        <label>¿Qué has hecho?
+          <textarea id="ex-texto" rows="4" placeholder="Ej.: llevo dos años tocando Java en proyectos propios; hice una API con Spring Boot conectada a PostgreSQL"></textarea>
+        </label>
+        <button id="btnAnadirEx" class="btn ancho">Redactar y añadir</button>
+        <p id="estadoEx" class="estado"></p>
+      </div>
+
+      <div class="tarjeta">
+        <h3>Carta de presentación</h3>
+        <label>Para (empresa / persona)<textarea id="ca-destino" rows="2"></textarea></label>
+        <label>Asunto<input id="ca-asunto"></label>
+        <label>Cuerpo (un párrafo por línea en blanco)
+          <textarea id="ca-parrafos" rows="12"></textarea>
+        </label>
+        <label>Despedida<input id="ca-despedida" value="Atentamente,"></label>
+      </div>
+
+      <div class="tarjeta">
+        <h3>Candidaturas guardadas</h3>
+        <div id="historial" class="historial"></div>
+      </div>
+    </div>
+
+    <div id="tab-diseno" class="tab">
+      <div class="tarjeta">
+        <h3>Plantilla</h3>
+        <div id="plantillas" class="plantillas"></div>
+        <label class="linea"><input id="modoATS" type="checkbox"> Versión ATS (sin foto ni colores, texto plano)</label>
+        <p class="ayuda">Las seis van en una sola columna, que es lo que los filtros automáticos leen
+          sin perderse. La versión ATS quita foto y color para los portales más tiquismiquis.</p>
+      </div>
+      <div class="tarjeta">
+        <h3>Color</h3>
+        <div id="colores" class="colores"></div>
+        <h3>Tamaño de letra <small id="valTamano"></small></h3>
+        <input id="tamano" type="range" min="8.4" max="11.4" step="0.1">
+        <button id="btnAjustar" class="btn ancho">Ajustar para que quepa en 2 páginas</button>
+        <p id="estadoAjuste" class="estado"></p>
+        <label class="linea"><input id="conFoto" type="checkbox" checked> Mostrar foto</label>
+        <h3>Secciones</h3>
+        <div id="secciones" class="secciones"></div>
+      </div>
+    </div>
+
+    <div id="tab-enviar" class="tab">
+      <div class="tarjeta">
+        <h3>1 · Preparar el envío</h3>
+        <p class="ayuda">Genera los PDF (CV, carta y los dos juntos), guarda la candidatura
+          y deja todo listo. Unos 15 segundos.</p>
+        <button id="btnPreparar" class="btn btn-oscuro ancho">Preparar envío</button>
+        <p id="estadoEnvio" class="estado"></p>
+        <div id="archivos" class="archivos"></div>
+      </div>
+
+      <div class="tarjeta" id="cajaEnvio" hidden>
+        <h3>2 · Cómo lo mandas</h3>
+        <div class="via">
+          <b>Por el portal (LinkedIn, Infojobs, Tecnoempleo…)</b>
+          <p class="ayuda">Te abro la oferta y la carpeta con los PDF, y te copio la carta al
+            portapapeles para el cuadro de «mensaje al reclutador». Subir y dar a enviar, tú.</p>
+          <span class="botones">
+            <button id="btnAbrirOferta" class="btn-mini">Abrir la oferta</button>
+            <button id="btnAbrirCarpeta" class="btn-mini">Abrir carpeta de los PDF</button>
+            <button id="btnCopiarCarta" class="btn-mini">Copiar la carta</button>
+          </span>
+        </div>
+        <div class="via">
+          <b>Por email</b>
+          <div class="rejilla2">
+            <label>Para<input id="en-para" placeholder="careers@empresa.com"></label>
+            <label>Asunto<input id="en-asunto"></label>
+          </div>
+          <label>Mensaje<textarea id="en-cuerpo" rows="7"></textarea></label>
+          <span class="botones">
+            <button id="btnMail" class="btn">Abrir borrador con los PDF adjuntos</button>
+            <button id="btnMailto" class="btn-mini">Solo abrir el correo (sin adjuntos)</button>
+            <button id="btnParaMi" class="btn-mini">Enviármelo a mí</button>
+          </span>
+          <p class="ayuda">El borrador se abre en Mail con los PDF ya puestos. <b>No se envía
+            nada</b>: lo revisas y le das a enviar tú.</p>
+        </div>
+      </div>
+    </div>
+
+  </section>
+  <section class="vista">
+    <div class="vista-barra">
+      <div class="pestanas">
+        <button class="pest activa" data-vista="cv">CV</button>
+        <button class="pest" data-vista="carta">Carta</button>
+        <button class="pest" data-vista="conjunto">Los dos</button>
+      </div>
+      <span id="paginas" class="pill pill-gris">—</span>
+    </div>
+    <div class="lienzo"><iframe id="previa" title="Vista previa"></iframe></div>
+  </section>
+</main>
+
+<script src="/web/app.js"></script>
+</body>
+</html>

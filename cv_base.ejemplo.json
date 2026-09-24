@@ -1,0 +1,104 @@
+{
+  "_perfil": "Example profile",
+  "_nota": "Sample data. Your real profile lives in perfiles/ and is git-ignored.",
+  "identidad": {
+    "nombre": "Alex Doe",
+    "titular": "Customer Support Engineer · SaaS",
+    "email": "alex.doe@example.com",
+    "telefono": "+34 600 000 000 / +1 555 000 0000",
+    "ciudad": "Málaga, Spain",
+    "linkedin": "linkedin.com/in/example",
+    "github": "github.com/example",
+    "whatsapp": "+1 555 000 0000",
+    "disponibilidad": "Immediate start · Full time · Rotating shifts, weekends and holidays",
+    "foto": "datos/foto_cuadrada.jpg"
+  },
+  "resumen": "Support engineer with six years keeping SaaS products running for small businesses: incident triage, integrations and billing issues. Kept a 70% annual renewal rate and cut first-response time in half with automated triage.",
+  "experiencia": [
+    {
+      "puesto": "Senior Support Engineer",
+      "empresa": "Example Inc.",
+      "ubicacion": "Remote",
+      "periodo": "01/2022 – 07/2026",
+      "puntos": [
+        "Handled tier 1 and 2 incidents by phone and chat for 30+ SMB accounts, resolving configuration and connectivity problems on the call.",
+        "Set up subscription billing and webhook reconciliation, clearing payment and account-state incidents without engineering escalation.",
+        "Cut first-response time by 50% by introducing automated triage over an LLM API."
+      ]
+    },
+    {
+      "puesto": "Operations Manager",
+      "empresa": "Example Restaurant",
+      "ubicacion": "Madrid",
+      "periodo": "01/2018 – 01/2021",
+      "puntos": [
+        "Ran daily operations: stock, suppliers, payroll and cost control.",
+        "Rolled out a digital POS that tightened cash control and cut service times."
+      ]
+    }
+  ],
+  "educacion": [
+    {
+      "institucion": "Example University",
+      "titulo": "BSc Information Technology",
+      "ubicacion": "Spain",
+      "periodo": "2013 – 2018"
+    }
+  ],
+  "conocimientos": [
+    "Ticketing software",
+    "SQL",
+    "REST APIs",
+    "webhooks",
+    "PostgreSQL",
+    "Linux",
+    "Docker",
+    "Git",
+    "Technical documentation"
+  ],
+  "proyectos": [
+    {
+      "nombre": "Example project",
+      "stack": "Python, PostgreSQL",
+      "enlace": "github.com/example/project",
+      "texto": "One or two lines on what it does and why it is interesting."
+    }
+  ],
+  "idiomas": [
+    {
+      "idioma": "Spanish",
+      "nivel": "Native",
+      "puntos": 5
+    },
+    {
+      "idioma": "English",
+      "nivel": "Advanced (C1)",
+      "puntos": 4
+    }
+  ],
+  "certificados": [
+    {
+      "titulo": "Example certificate",
+      "entidad": "Issuer",
+      "fecha": "01/2025"
+    }
+  ],
+  "intereses": [],
+  "orden": [
+    "experiencia",
+    "educacion",
+    "conocimientos",
+    "proyectos",
+    "idiomas",
+    "certificados",
+    "intereses"
+  ],
+  "secciones_ocultas": [],
+  "estilo": {
+    "color": "#4A76B8",
+    "tamano": 10.0,
+    "foto": true,
+    "plantilla": "cape_town",
+    "ats": false
+  }
+}

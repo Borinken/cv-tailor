@@ -1,0 +1,495 @@
+{
+ "cv": {
+  "_perfil": "Soporte y Customer Success",
+  "_nota": "Sample data. Your real profile lives in perfiles/ and is git-ignored.",
+  "identidad": {
+   "nombre": "Alex Doe",
+   "titular": "Customer Support Engineer · SaaS",
+   "email": "alex.doe@example.com",
+   "telefono": "+34 600 000 000 / +1 555 000 0000",
+   "ciudad": "Málaga, Spain",
+   "linkedin": "linkedin.com/in/example",
+   "github": "github.com/example",
+   "whatsapp": "+1 555 000 0000",
+   "disponibilidad": "Immediate start · Full time · Rotating shifts, including weekends",
+   "foto": "datos/foto_cuadrada.jpg"
+  },
+  "resumen": "Customer support specialist with six years resolving tier 1 and 2 technical incidents for SaaS accounts: configuration, connectivity and billing issues tracked through ticketing software, with SQL used daily to query customer data. I also ran daily operations for three years at a restaurant, including a digital POS rollout, so I know the hospitality side of the business too. Available for rotating shifts, including weekends, with immediate start.",
+  "experiencia": [
+   {
+    "puesto": "Senior Support Engineer",
+    "empresa": "Example Inc.",
+    "ubicacion": "Remote",
+    "periodo": "01/2022 – 07/2026",
+    "puntos": [
+     "Resolved tier 1 and 2 technical incidents by phone and chat for 30+ SMB accounts, logging and tracking each case in ticketing software and closing configuration and connectivity issues on the call.",
+     "Queried customer data in SQL to set up subscription billing and webhook reconciliation, clearing payment and account-state incidents without engineering escalation.",
+     "Cut first-response time by 50% by introducing automated triage over an LLM API.",
+     "Kept a 70% annual renewal rate across supported accounts."
+    ]
+   },
+   {
+    "puesto": "Operations Manager",
+    "empresa": "Example Restaurant",
+    "ubicacion": "Madrid",
+    "periodo": "01/2018 – 01/2021",
+    "puntos": [
+     "Ran daily operations at a restaurant: stock, suppliers, payroll and cost control.",
+     "Rolled out a digital POS system that tightened cash control and cut service times."
+    ]
+   }
+  ],
+  "educacion": [
+   {
+    "institucion": "Example University",
+    "titulo": "BSc Information Technology",
+    "ubicacion": "Spain",
+    "periodo": "2013 – 2018"
+   }
+  ],
+  "conocimientos": [
+   "Ticketing software",
+   "SQL",
+   "REST APIs",
+   "webhooks",
+   "PostgreSQL",
+   "Technical documentation",
+   "Linux",
+   "Docker",
+   "Git"
+  ],
+  "proyectos": [],
+  "idiomas": [
+   {
+    "idioma": "Spanish",
+    "nivel": "Native",
+    "puntos": 5
+   },
+   {
+    "idioma": "English",
+    "nivel": "Advanced (C1)",
+    "puntos": 4
+   }
+  ],
+  "certificados": [
+   {
+    "titulo": "Example certificate",
+    "entidad": "Issuer",
+    "fecha": "01/2025"
+   }
+  ],
+  "intereses": [],
+  "orden": [
+   "experiencia",
+   "educacion",
+   "conocimientos",
+   "proyectos",
+   "idiomas",
+   "certificados",
+   "intereses"
+  ],
+  "secciones_ocultas": [
+   "proyectos"
+  ],
+  "estilo": {
+   "color": "#4A76B8",
+   "tamano": 10.0,
+   "foto": true,
+   "plantilla": "cape_town",
+   "ats": false
+  },
+  "titular": "Customer Support Specialist · SaaS for Hospitality"
+ },
+ "carta": {
+  "destino": "Sample Hospitality SaaS\nHiring Team",
+  "asunto": "Application for Customer Support Specialist",
+  "parrafos": [
+   "I'm writing about the Customer Support Specialist opening for your hospitality POS platform, which I saw on LinkedIn. Six years handling tier 1 and 2 technical incidents for SaaS accounts line up closely with what the role asks for.",
+   "At Example Inc. I resolved configuration and connectivity issues by phone and chat for more than 30 SMB accounts, logging every case through ticketing software. I also queried customer data in SQL to set up subscription billing and webhook reconciliation, clearing payment and account-state incidents without pulling in engineering. Automating triage over an LLM API cut first-response time by 50%.",
+   "Before that, I ran daily operations at a restaurant for three years: stock, suppliers, payroll and cost control. I rolled out a digital POS system there myself, so I know how these tools work from the floor, not just from the ticket queue.",
+   "I'm available to start immediately and can cover rotating shifts, including weekends. I'd like to talk about how I can support your restaurant and bar customers."
+  ],
+  "despedida": "Best regards,"
+ },
+ "requisitos": [
+  {
+   "pide": "Proven experience in customer support and technical incident resolution (tier 1 and 2)",
+   "peso": "imprescindible",
+   "palabras": [
+    "technical incident resolution",
+    "tier 1 and 2"
+   ],
+   "cumple": "si",
+   "donde": "Experience: Senior Support Engineer, point 1",
+   "palabras_detalle": [
+    {
+     "palabra": "technical incident resolution",
+     "en_cv": false,
+     "en_carta": false,
+     "en_perfil": false
+    },
+    {
+     "palabra": "tier 1 and 2",
+     "en_cv": true,
+     "en_carta": true,
+     "en_perfil": false
+    }
+   ],
+   "en_cv": true
+  },
+  {
+   "pide": "Hands-on with ticketing software (Zendesk, Freshdesk or similar)",
+   "peso": "imprescindible",
+   "palabras": [
+    "ticketing software"
+   ],
+   "cumple": "parcial",
+   "donde": "Skills: Ticketing software; Experience: Senior Support Engineer, point 1 — no specific tool named",
+   "palabras_detalle": [
+    {
+     "palabra": "ticketing software",
+     "en_cv": true,
+     "en_carta": true,
+     "en_perfil": false
+    }
+   ],
+   "en_cv": true
+  },
+  {
+   "pide": "SQL to query customer data",
+   "peso": "imprescindible",
+   "palabras": [
+    "SQL"
+   ],
+   "cumple": "si",
+   "donde": "Skills: SQL; Experience: Senior Support Engineer, point 2",
+   "palabras_detalle": [
+    {
+     "palabra": "SQL",
+     "en_cv": true,
+     "en_carta": true,
+     "en_perfil": false
+    }
+   ],
+   "en_cv": true
+  },
+  {
+   "pide": "Availability for rotating shifts, including weekends",
+   "peso": "imprescindible",
+   "palabras": [
+    "rotating shifts",
+    "weekends"
+   ],
+   "cumple": "si",
+   "donde": "Availability section",
+   "palabras_detalle": [
+    {
+     "palabra": "rotating shifts",
+     "en_cv": true,
+     "en_carta": true,
+     "en_perfil": false
+    },
+    {
+     "palabra": "weekends",
+     "en_cv": true,
+     "en_carta": true,
+     "en_perfil": false
+    }
+   ],
+   "en_cv": true
+  },
+  {
+   "pide": "Immediate start",
+   "peso": "imprescindible",
+   "palabras": [
+    "Immediate start"
+   ],
+   "cumple": "si",
+   "donde": "Availability section",
+   "palabras_detalle": [
+    {
+     "palabra": "Immediate start",
+     "en_cv": true,
+     "en_carta": false,
+     "en_perfil": false
+    }
+   ],
+   "en_cv": true
+  },
+  {
+   "pide": "Background in hospitality or with POS systems",
+   "peso": "valorable",
+   "palabras": [
+    "hospitality",
+    "POS systems"
+   ],
+   "cumple": "si",
+   "donde": "Experience: Operations Manager, Example Restaurant",
+   "palabras_detalle": [
+    {
+     "palabra": "hospitality",
+     "en_cv": true,
+     "en_carta": true,
+     "en_perfil": false
+    },
+    {
+     "palabra": "POS systems",
+     "en_cv": false,
+     "en_carta": false,
+     "en_perfil": false
+    }
+   ],
+   "en_cv": true
+  },
+  {
+   "pide": "English B2 or above",
+   "peso": "valorable",
+   "palabras": [
+    "English B2"
+   ],
+   "cumple": "si",
+   "donde": "Languages: English Advanced (C1)",
+   "palabras_detalle": [
+    {
+     "palabra": "English B2",
+     "en_cv": false,
+     "en_carta": false,
+     "en_perfil": false
+    }
+   ],
+   "en_cv": false
+  },
+  {
+   "pide": "REST APIs and payment integrations",
+   "peso": "valorable",
+   "palabras": [
+    "REST APIs",
+    "payment integrations"
+   ],
+   "cumple": "parcial",
+   "donde": "Skills: REST APIs, Webhooks; Experience: Senior Support Engineer, point 2 (subscription billing, webhook reconciliation) — no named payment gateway",
+   "palabras_detalle": [
+    {
+     "palabra": "REST APIs",
+     "en_cv": true,
+     "en_carta": false,
+     "en_perfil": false
+    },
+    {
+     "palabra": "payment integrations",
+     "en_cv": false,
+     "en_carta": false,
+     "en_perfil": false
+    }
+   ],
+   "en_cv": true
+  }
+ ],
+ "cobertura": {
+  "requisitos": [
+   {
+    "pide": "Proven experience in customer support and technical incident resolution (tier 1 and 2)",
+    "peso": "imprescindible",
+    "palabras": [
+     "technical incident resolution",
+     "tier 1 and 2"
+    ],
+    "cumple": "si",
+    "donde": "Experience: Senior Support Engineer, point 1",
+    "palabras_detalle": [
+     {
+      "palabra": "technical incident resolution",
+      "en_cv": false,
+      "en_carta": false,
+      "en_perfil": false
+     },
+     {
+      "palabra": "tier 1 and 2",
+      "en_cv": true,
+      "en_carta": true,
+      "en_perfil": false
+     }
+    ],
+    "en_cv": true
+   },
+   {
+    "pide": "Hands-on with ticketing software (Zendesk, Freshdesk or similar)",
+    "peso": "imprescindible",
+    "palabras": [
+     "ticketing software"
+    ],
+    "cumple": "parcial",
+    "donde": "Skills: Ticketing software; Experience: Senior Support Engineer, point 1 — no specific tool named",
+    "palabras_detalle": [
+     {
+      "palabra": "ticketing software",
+      "en_cv": true,
+      "en_carta": true,
+      "en_perfil": false
+     }
+    ],
+    "en_cv": true
+   },
+   {
+    "pide": "SQL to query customer data",
+    "peso": "imprescindible",
+    "palabras": [
+     "SQL"
+    ],
+    "cumple": "si",
+    "donde": "Skills: SQL; Experience: Senior Support Engineer, point 2",
+    "palabras_detalle": [
+     {
+      "palabra": "SQL",
+      "en_cv": true,
+      "en_carta": true,
+      "en_perfil": false
+     }
+    ],
+    "en_cv": true
+   },
+   {
+    "pide": "Availability for rotating shifts, including weekends",
+    "peso": "imprescindible",
+    "palabras": [
+     "rotating shifts",
+     "weekends"
+    ],
+    "cumple": "si",
+    "donde": "Availability section",
+    "palabras_detalle": [
+     {
+      "palabra": "rotating shifts",
+      "en_cv": true,
+      "en_carta": true,
+      "en_perfil": false
+     },
+     {
+      "palabra": "weekends",
+      "en_cv": true,
+      "en_carta": true,
+      "en_perfil": false
+     }
+    ],
+    "en_cv": true
+   },
+   {
+    "pide": "Immediate start",
+    "peso": "imprescindible",
+    "palabras": [
+     "Immediate start"
+    ],
+    "cumple": "si",
+    "donde": "Availability section",
+    "palabras_detalle": [
+     {
+      "palabra": "Immediate start",
+      "en_cv": true,
+      "en_carta": false,
+      "en_perfil": false
+     }
+    ],
+    "en_cv": true
+   },
+   {
+    "pide": "Background in hospitality or with POS systems",
+    "peso": "valorable",
+    "palabras": [
+     "hospitality",
+     "POS systems"
+    ],
+    "cumple": "si",
+    "donde": "Experience: Operations Manager, Example Restaurant",
+    "palabras_detalle": [
+     {
+      "palabra": "hospitality",
+      "en_cv": true,
+      "en_carta": true,
+      "en_perfil": false
+     },
+     {
+      "palabra": "POS systems",
+      "en_cv": false,
+      "en_carta": false,
+      "en_perfil": false
+     }
+    ],
+    "en_cv": true
+   },
+   {
+    "pide": "English B2 or above",
+    "peso": "valorable",
+    "palabras": [
+     "English B2"
+    ],
+    "cumple": "si",
+    "donde": "Languages: English Advanced (C1)",
+    "palabras_detalle": [
+     {
+      "palabra": "English B2",
+      "en_cv": false,
+      "en_carta": false,
+      "en_perfil": false
+     }
+    ],
+    "en_cv": false
+   },
+   {
+    "pide": "REST APIs and payment integrations",
+    "peso": "valorable",
+    "palabras": [
+     "REST APIs",
+     "payment integrations"
+    ],
+    "cumple": "parcial",
+    "donde": "Skills: REST APIs, Webhooks; Experience: Senior Support Engineer, point 2 (subscription billing, webhook reconciliation) — no named payment gateway",
+    "palabras_detalle": [
+     {
+      "palabra": "REST APIs",
+      "en_cv": true,
+      "en_carta": false,
+      "en_perfil": false
+     },
+     {
+      "palabra": "payment integrations",
+      "en_cv": false,
+      "en_carta": false,
+      "en_perfil": false
+     }
+    ],
+    "en_cv": true
+   }
+  ],
+  "imprescindibles": 5,
+  "cubiertos": 5,
+  "perdidas": [],
+  "porcentaje": 100
+ },
+ "sugerencias": [
+  {
+   "pregunta": "Which ticketing tool did you use day to day — Zendesk, Freshdesk or another one?",
+   "si_lo_tienes": "Logged and tracked tier 1 and 2 incidents in Zendesk for 30+ SMB accounts, closing configuration and connectivity issues on the call.",
+   "donde": "experiencia:0",
+   "conocimientos": [
+    "Zendesk"
+   ]
+  },
+  {
+   "pregunta": "Did you work directly with a payment gateway — Stripe or similar — as part of the billing and webhook work?",
+   "si_lo_tienes": "Integrated Stripe payment processing into the subscription billing flow, resolving payment failures and account-state mismatches without engineering escalation.",
+   "donde": "experiencia:0",
+   "conocimientos": [
+    "Stripe"
+   ]
+  }
+ ],
+ "sector": "Customer support · hospitality SaaS",
+ "enfoque": "Led with tier 1/2 incident resolution, ticketing and SQL, then surfaced the restaurant management background as direct hospitality and POS experience.",
+ "_generado": "sample adaptation, real output",
+ "ajustes": {
+  "empresa": "Sample Hospitality SaaS",
+  "puesto": "Customer Support Specialist",
+  "fuente": "LinkedIn",
+  "oferta": "Customer Support Specialist — SaaS for hospitality (Málaga, hybrid).\nMust have: customer support and tier 1/2 incident resolution; ticketing software (Zendesk, Freshdesk); SQL; rotating shifts including weekends.\nNice to have: hospitality or POS background; English B2+; REST APIs."
+ }
+}

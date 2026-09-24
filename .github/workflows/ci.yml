@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Python syntax
+        run: python -m compileall -q servidor.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: JavaScript syntax
+        run: |
+          node --check web/app.js
+          node --check web/marcador.js
+
+      - name: Sample profile is valid JSON
+        run: python -c "import json; json.load(open('cv_base.ejemplo.json'))"
+
+      - name: Server boots and answers
+        run: |
+          cp cv_base.ejemplo.json cv_base.json
+          python3 servidor.py --no-abrir &
+          for i in $(seq 1 20); do
+            curl -sf http://127.0.0.1:8765/api/plantillas > /dev/null && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:8765/api/plantillas | python -c "import json,sys; d=json.load(sys.stdin); assert len(d) == 6, d; print('templates:', ', '.join(d))"
+          curl -sf -X POST -H 'Content-Type: application/json' \
+            -d "$(python -c "import json; print(json.dumps({'cv': json.load(open('cv_base.ejemplo.json')), 'tipo': 'cv'}))")" \
+            http://127.0.0.1:8765/api/render | python -c "import json,sys; h=json.load(sys.stdin)['html']; assert 'WORK EXPERIENCE' in h or 'EXPERIENCIA' in h; print('render ok:', len(h), 'bytes')"
+
+      - name: No personal data committed
+        run: |
+          test ! -e cv_base.json.orig
+          ! git ls-files | grep -E '^(perfiles/|salidas/|ajustes\.json|datos/.+\.(jpg|jpeg|png))$'
+          echo "clean"
