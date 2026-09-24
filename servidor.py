@@ -1232,9 +1232,24 @@ PASO 5. Sugerencias: para lo que salga "no" o "parcial", propón qué podría a�
         - "si_lo_tienes": la frase EXACTA que se va a pegar en el CV si contesta que sí. Tiene que
           quedar terminada, en su estilo, con el vocabulario de esta oferta, lista para enviar sin
           tocarla. Ni "podría", ni "tengo conocimientos de": redáctala como el resto de sus puntos.
-        - "donde": dónde va esa frase. Usa "experiencia:0" (empleo más reciente), "experiencia:1",
-          "conocimientos" (si solo son tecnologías sueltas) o "proyecto".
-        - "conocimientos": lista de tecnologías que deberían aparecer como chip si dice que sí.
+        - "donde": el sitio del CV al que pertenece. Elige con cuidado, porque se inserta ahí:
+            · "experiencia:0" / "experiencia:1" → algo que HIZO en ese empleo. Solo esto lleva frase.
+            · "conocimientos" → una herramienta, tecnología o habilidad suelta (Zendesk, Jira, SAP,
+              inglés técnico, Excel avanzado). NO es una frase: va como etiqueta corta.
+            · "certificados" → un curso, certificación o carné (SSCE, ITIL, carné B, manipulador
+              de alimentos).
+            · "idiomas" → un idioma con su nivel.
+            · "disponibilidad" → turnos, jornada, festivos, incorporación, viajar, vehículo propio.
+              Nunca metas esto en la experiencia: no es algo que hiciera, es una condición suya.
+            · "proyecto" → algo propio, fuera de un empleo.
+        - "si_lo_tienes": para "experiencia" y "proyecto", la frase terminada. Para los demás
+          destinos, el texto corto que va a esa sección ("Zendesk", "ITIL v4",
+          "Inglés — C1", "Turnos rotativos y festivos").
+        - "conocimientos": las etiquetas que deberían aparecer como chip si dice que sí; [] si ninguna.
+
+        Además de los huecos, propón las herramientas o habilidades que ESTA oferta pide y que
+        el reclutador va a buscar (el software del sector, la certificación típica, el idioma),
+        aunque el anuncio solo las mencione de pasada.
 PASO 6. Carta: 3 o 4 párrafos, máximo 230 palabras, tono profesional y directo, sin frases hechas.
         Primer párrafo: qué puesto y dónde lo vio. Si le falta un requisito importante, la carta
         puede decir qué tiene que se le parece; jamás afirmar que domina algo que no ha hecho.

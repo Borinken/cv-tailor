@@ -413,7 +413,10 @@ function pintarDestinos() {
   cv.experiencia.forEach((x, i) => sel.append(
     crear("option", { value: "exp:" + i, textContent: "Experiencia: " + (x.puesto || "empleo " + (i + 1)) })));
   sel.append(crear("option", { value: "proyecto", textContent: "Un proyecto nuevo" }));
-  sel.append(crear("option", { value: "conocimientos", textContent: "Solo conocimientos (chips)" }));
+  sel.append(crear("option", { value: "conocimientos", textContent: "Conocimientos (etiqueta)" }));
+  sel.append(crear("option", { value: "certificados", textContent: "Certificados / cursos" }));
+  sel.append(crear("option", { value: "idiomas", textContent: "Idiomas" }));
+  sel.append(crear("option", { value: "disponibilidad", textContent: "Disponibilidad" }));
 }
 
 /* ------------------------------------------------- lo que pide el reclutador */
@@ -495,37 +498,66 @@ function pintarRequisitos(lista, cobertura) {
 }
 
 function insertarSugerencia(s) {
-  const frase = (s.si_lo_tienes || "").trim();
+  const texto = (s.si_lo_tienes || "").trim();
   const bruto = String(s.donde || "").toLowerCase().trim();
-  // la IA puede contestar en inglés ("experience:0", "skills"): lo aceptamos igual
-  let destino = "experiencia";
-  if (/^(proy|proj)/.test(bruto)) destino = "proyecto";
-  else if (/(conoc|skill|knowledge|habilidad)/.test(bruto)) destino = "conocimientos";
   const numero = bruto.match(/(\d+)/);
   const indice = numero ? Number(numero[1]) : 0;
 
-  let puesto = false;
-  if (frase) {
-    if (destino === "proyecto") {
-      cv.proyectos.unshift({ nombre: "Proyecto (ponle nombre)",
-        stack: (s.conocimientos || []).join(", "), enlace: "", texto: frase });
-      puesto = true;
-    } else if (cv.experiencia.length) {           // conocimientos sueltos también llevan frase
-      const i = Math.min(Math.max(indice, 0), cv.experiencia.length - 1);
-      cv.experiencia[i].puntos.unshift(frase);
-      puesto = true;
-      destino = destino === "conocimientos" ? "experiencia" : destino;
-    }
-  }
-  let chips = 0;
-  (s.conocimientos || []).forEach((c) => {
+  let destino = "experiencia";
+  if (/(disponib|availab|turno|shift|jornada|horario|incorporaci)/.test(bruto)) destino = "disponibilidad";
+  else if (/(certificad|certificat|curso|course|carn[eé]|licen)/.test(bruto)) destino = "certificados";
+  else if (/(idioma|language|ingl|english)/.test(bruto)) destino = "idiomas";
+  else if (/(conoc|skill|herramienta|tool|knowledge|habilidad)/.test(bruto)) destino = "conocimientos";
+  else if (/^(proy|proj)/.test(bruto)) destino = "proyecto";
+
+  const meteChip = (c) => {
     if (c && !cv.conocimientos.some((x) => String(x).toLowerCase() === String(c).toLowerCase())) {
-      cv.conocimientos.unshift(c);
-      chips++;
+      cv.conocimientos.push(c);
+      return 1;
     }
-  });
+    return 0;
+  };
+
+  let hecho = "";
+  if (destino === "disponibilidad" && texto) {
+    const limpia = (t) => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .split(/[^a-z0-9]+/).filter((p) => p.length > 3);
+    const nuevas = limpia(texto);
+    const trozos = (cv.identidad.disponibilidad || "").split("·").map((t) => t.trim()).filter(Boolean);
+    // si ya dice lo mismo con otras palabras, no lo repetimos
+    const repetido = trozos.some((t) => {
+      const suyas = limpia(t);
+      const comunes = nuevas.filter((p) => suyas.includes(p));
+      return nuevas.length && comunes.length >= Math.ceil(nuevas.length * 0.6);
+    });
+    if (!repetido) trozos.push(texto);
+    cv.identidad.disponibilidad = trozos.join(" · ");
+    hecho = "disponibilidad";
+  } else if (destino === "certificados" && texto) {
+    cv.certificados.unshift({ titulo: texto, entidad: "", fecha: "" });
+    hecho = "certificados";
+  } else if (destino === "idiomas" && texto) {
+    const partes = texto.split(/[—\-·:]/).map((x) => x.trim()).filter(Boolean);
+    cv.idiomas.push({ idioma: partes[0] || texto, nivel: partes[1] || "", puntos: 3 });
+    hecho = "idiomas";
+  } else if (destino === "conocimientos") {
+    hecho = "conocimientos";                      // solo etiquetas: nunca una frase suelta
+  } else if (destino === "proyecto" && texto) {
+    cv.proyectos.unshift({ nombre: "Proyecto (ponle nombre)",
+      stack: (s.conocimientos || []).join(", "), enlace: "", texto });
+    hecho = "proyectos";
+  } else if (texto && cv.experiencia.length) {
+    const i = Math.min(Math.max(indice, 0), cv.experiencia.length - 1);
+    cv.experiencia[i].puntos.unshift(texto);
+    hecho = "experiencia";
+  }
+
+  let chips = 0;
+  (s.conocimientos || []).forEach((c) => { chips += meteChip(c); });
+  if (destino === "conocimientos" && !chips && texto) chips += meteChip(texto);
+
   pintarEditor(); refrescar();
-  return { puesto, chips, destino };
+  return { hecho, chips, destino };
 }
 
 function pintarSugerencias(lista) {
@@ -540,13 +572,14 @@ function pintarSugerencias(lista) {
     const anadir = crear("button", { className: "btn-mini", textContent: "Lo tengo → añadir" });
     anadir.onclick = () => {                       // directo, sin esperar a la IA
       const r = insertarSugerencia(s);
-      if (!r.puesto && !r.chips) {
+      if (!r.hecho && !r.chips) {
         anadir.textContent = "No he sabido dónde ponerlo";
         return;
       }
       ficha.classList.add("puesta");
       anadir.disabled = true;
-      anadir.textContent = r.puesto ? "Añadido ✓ a " + r.destino : "Añadido ✓ a conocimientos";
+      const sitio = r.hecho || "conocimientos";
+      anadir.textContent = "Añadido ✓ a " + sitio + (r.chips ? " (+" + r.chips + " chip)" : "");
       editar.textContent = "Ver dónde ha quedado";
     };
     const editar = crear("button", { className: "btn-mini", textContent: "Redactarlo a mi manera" });
@@ -836,209 +869,36 @@ $("#btnAnadirEx").onclick = async () => {
   const destino = $("#ex-destino").value;
   $("#btnAnadirEx").disabled = true;
   try {
-    const r = await conEstado(nodo, "Redactando…",
-      () => api("/api/anadir-experiencia", { cv, texto, destino, ajustes: leerAjustes() }));
-    const puntos = r.puntos || [];
-    if (destino.startsWith("exp:")) {
-      const i = Number(destino.split(":")[1]);
-      cv.experiencia[i].puntos = [...puntos, ...cv.experiencia[i].puntos];
-    } else if (destino === "proyecto") {
-      cv.proyectos.unshift({ nombre: "Nuevo proyecto (ponle nombre)", stack: (r.conocimientos || []).join(", "),
-        enlace: "", texto: puntos.join(" ") });
+    // los destinos cortos no necesitan que la IA redacte nada
+    if (["conocimientos", "certificados", "idiomas", "disponibilidad"].includes(destino)) {
+      const r = insertarSugerencia({ si_lo_tienes: texto, donde: destino });
+      $("#ex-texto").value = "";
+      nodo.className = "estado ok";
+      nodo.textContent = "Añadido a " + (r.hecho || destino) + ".";
+    } else {
+      const r = await conEstado(nodo, "Redactando…",
+        () => api("/api/anadir-experiencia", { cv, texto, destino, ajustes: leerAjustes() }));
+      const puntos = r.puntos || [];
+      if (destino.startsWith("exp:")) {
+        const i = Number(destino.split(":")[1]);
+        cv.experiencia[i].puntos = [...puntos, ...cv.experiencia[i].puntos];
+      } else if (destino === "proyecto") {
+        cv.proyectos.unshift({ nombre: "Proyecto (ponle nombre)",
+          stack: (r.conocimientos || []).join(", "), enlace: "", texto: puntos.join(" ") });
+      }
+      (r.conocimientos || []).forEach((c) => {
+        if (!cv.conocimientos.some((x) => String(x).toLowerCase() === String(c).toLowerCase())) {
+          cv.conocimientos.push(c);
+        }
+      });
+      $("#ex-texto").value = "";
+      pintarEditor(); refrescar();
+      nodo.className = "estado ok";
+      nodo.textContent = "Añadido. " + (r.aviso || "Revísalo por si acaso.");
     }
-    (r.conocimientos || []).forEach((c) => { if (!cv.conocimientos.includes(c)) cv.conocimientos.unshift(c); });
-    $("#ex-texto").value = "";
-    pintarEditor(); refrescar();
-    nodo.className = "estado ok";
-    nodo.textContent = "Añadido arriba del todo. " + (r.aviso || "Revísalo por si acaso.");
   } catch (e) { /* ya mostrado */ }
   $("#btnAnadirEx").disabled = false;
 };
-
-/* ---------------------------------------------------------------- enviar */
-let envio = null;
-
-$("#btnPreparar").onclick = async () => {
-  const nodo = $("#estadoEnvio");
-  $("#btnPreparar").disabled = true;
-  try {
-    envio = await conEstado(nodo, "Generando los PDF y guardando la candidatura…",
-      () => api("/api/preparar-envio", { cv, carta, ajustes: leerAjustes() }));
-    const caja = $("#archivos");
-    caja.textContent = "";
-    Object.entries(envio.archivos).forEach(([clave, ruta]) => {
-      const nombre = ruta.split("/").pop();
-      const fila = crear("div", { className: "archivo" }, [crear("span", { textContent: nombre })]);
-      const b = crear("button", { className: "btn-mini", textContent: "Descargar" });
-      b.onclick = () => descargar(clave === "conjunto" ? "conjunto" : clave);
-      fila.append(b);
-      caja.append(fila);
-    });
-    $("#cajaEnvio").hidden = false;
-    $("#en-para").value = envio.email || "";
-    $("#en-asunto").value = envio.asunto || "";
-    $("#en-cuerpo").value = envio.cuerpo || "";
-    nodo.className = "estado ok";
-    nodo.textContent = "Listo, en " + envio.carpeta.split("/").pop();
-  } catch (e) { /* mostrado */ }
-  $("#btnPreparar").disabled = false;
-};
-
-$("#btnAuditar").onclick = async () => {
-  const nodo = $("#estadoAuditoria");
-  const caja = $("#auditoria");
-  $("#btnAuditar").disabled = true;
-  caja.textContent = "";
-  try {
-    const r = await conEstado(nodo, "Generando el PDF y leyéndolo como un ATS…",
-      () => api("/api/auditoria", { cv, carta, ajustes: leerAjustes() }));
-
-    const resumen = crear("div", { className: "resumen-auditoria" + (r.fallan ? " mal" : " bien") }, [
-      crear("b", { textContent: r.fallan
-        ? r.fallan + (r.fallan === 1 ? " cosa que arreglar" : " cosas que arreglar")
-        : "Pasa todas las comprobaciones" }),
-      crear("span", { textContent: r.caracteres + " caracteres legibles · " + r.paginas +
-        (r.paginas === 1 ? " página" : " páginas") + " · " + r.concretos +
-        "% de tus puntos llevan un dato o una cifra" }),
-    ]);
-    caja.append(resumen);
-
-    r.pruebas.forEach((p) => {
-      caja.append(crear("div", { className: "chequeo " + (p.ok ? "si" : "no") }, [
-        crear("span", { className: "icono", textContent: p.ok ? "✓" : "✕" }),
-        crear("div", {}, [
-          crear("b", { textContent: p.titulo }),
-          crear("span", { textContent: p.detalle || "" }),
-        ]),
-      ]));
-    });
-
-    if (r.señales && r.señales.length) {
-      caja.append(crear("div", { className: "senales" }, [
-        crear("b", { textContent: "Huele a texto de IA (lo nota el humano, no el filtro):" }),
-        ...r.señales.map((s) => crear("span", { className: "senal",
-          textContent: s.tipo + ": " + s.texto })),
-      ]));
-    } else {
-      caja.append(crear("div", { className: "senales limpio" }, [
-        crear("b", { textContent: "Sin muletillas ni patrones típicos de IA." })]));
-    }
-    nodo.className = "estado " + (r.fallan ? "mal" : "ok");
-    nodo.textContent = r.fallan ? "Revisa lo marcado en rojo." : "Listo para enviar.";
-  } catch (e) { /* el estado lo dice */ }
-  $("#btnAuditar").disabled = false;
-};
-
-const abrir = (que, valor) => api("/api/abrir", { que, valor });
-$("#btnAbrirOferta").onclick = () => {
-  const url = $("#of-url").value.trim();
-  if (!url) return alert("No tengo el enlace de la oferta: pégalo en «Adaptar al empleo».");
-  abrir("url", url);
-};
-$("#btnAbrirCarpeta").onclick = () => envio && abrir("carpeta", envio.carpeta);
-$("#btnCopiarCarta").onclick = async () => {
-  await navigator.clipboard.writeText($("#en-cuerpo").value || "");
-  $("#btnCopiarCarta").textContent = "Copiada ✓";
-  setTimeout(() => ($("#btnCopiarCarta").textContent = "Copiar la carta"), 2000);
-};
-$("#btnParaMi").onclick = () => { $("#en-para").value = cv.identidad.email || ""; };
-$("#btnMail").onclick = async () => {
-  if (!envio) return alert("Pulsa antes «Preparar envío».");
-  const nodo = $("#estadoEnvio");
-  try {
-    await api("/api/abrir", {
-      que: "mail", para: $("#en-para").value, asunto: $("#en-asunto").value,
-      cuerpo: $("#en-cuerpo").value, adjuntos: Object.values(envio.archivos),
-    });
-    nodo.className = "estado ok";
-    nodo.textContent = "Borrador abierto en Mail con los PDF. Revísalo y envíalo tú.";
-  } catch (e) {
-    nodo.className = "estado mal";
-    nodo.textContent = e.message;
-  }
-};
-$("#btnMailto").onclick = () => {
-  const url = "mailto:" + encodeURIComponent($("#en-para").value) +
-    "?subject=" + encodeURIComponent($("#en-asunto").value) +
-    "&body=" + encodeURIComponent($("#en-cuerpo").value);
-  window.location.href = url;
-};
-
-/* ---------------------------------------------------------------- perfiles */
-let perfiles = [];
-
-function pintarPerfiles() {
-  const sel = $("#selPerfil");
-  sel.textContent = "";
-  perfiles.forEach((p) => {
-    const op = crear("option", { value: p.slug, textContent: p.nombre });
-    if (p.activo) op.selected = true;
-    sel.append(op);
-  });
-  $("#btnBorrarPerfil").disabled = perfiles.length <= 1;
-}
-
-async function cargarPerfiles() {
-  perfiles = await api("/api/perfiles");
-  pintarPerfiles();
-}
-
-$("#selPerfil").onchange = async () => {
-  const r = await api("/api/usar-perfil", { slug: $("#selPerfil").value });
-  cv = r.cv;
-  cv.secciones_ocultas = cv.secciones_ocultas || [];
-  cv.estilo = Object.assign({ color: "#4A76B8", tamano: 10, foto: true, plantilla: "cape_town", ats: false },
-    cv.estilo || {});
-  await cargarPerfiles();
-  pintarEditor(); pintarDiseno(); pintarIdioma(); refrescar();
-};
-
-$("#btnNuevoPerfil").onclick = async () => {
-  const nombre = prompt("Nombre del perfil nuevo (ej.: Desarrollo, Soporte, Hostelería):",
-    "Perfil " + (perfiles.length + 1));
-  if (!nombre) return;
-  const r = await api("/api/guardar-perfil", { nombre, cv });
-  perfiles = r.perfiles;
-  pintarPerfiles();
-  $("#btnNuevoPerfil").textContent = "Creado ✓";
-  setTimeout(() => ($("#btnNuevoPerfil").textContent = "+ Perfil"), 1800);
-};
-
-$("#btnBorrarPerfil").onclick = async () => {
-  const actual = perfiles.find((p) => p.activo) || perfiles[0];
-  if (!confirm("¿Borro el perfil «" + actual.nombre + "»? El CV que contiene se pierde.")) return;
-  const r = await api("/api/borrar-perfil", { slug: actual.slug });
-  perfiles = r.perfiles;
-  pintarPerfiles();
-  $("#selPerfil").onchange();
-};
-
-/* ---------------------------------------------------------------- idioma */
-function pintarIdioma() {
-  const en = cv.idioma === "en";
-  $("#btnEn").classList.toggle("activa", en);
-  $("#btnEs").classList.toggle("activa", !en);
-}
-
-async function cambiarIdioma(idioma) {
-  if ((cv.idioma || "es") === idioma) return;
-  const aviso = idioma === "en"
-    ? "Voy a traducir el CV y la carta al inglés. Tarda un par de minutos. ¿Sigo?"
-    : "Voy a traducirlo todo al español. ¿Sigo?";
-  if (!confirm(aviso)) return;
-  const nodo = $("#estadoAdaptar");
-  document.querySelector('.pest[data-tab="adaptar"]').click();
-  try {
-    const r = await conEstado(nodo, "Traduciendo el CV y la carta…",
-      () => api("/api/traducir", { cv, carta, idioma }));
-    cv = r.cv; carta = r.carta || carta;
-    pintarEditor(); pintarDiseno(); pintarCarta(); pintarIdioma(); refrescar();
-    nodo.className = "estado ok";
-    nodo.textContent = idioma === "en" ? "Traducido. Revísalo antes de enviarlo." : "Vuelto al español.";
-  } catch (e) { /* mostrado */ }
-}
-$("#btnEn").onclick = () => cambiarIdioma("en");
-$("#btnEs").onclick = () => cambiarIdioma("es");
 
 $("#btnPdfCV").onclick = () => descargar("cv");
 $("#btnPdfCarta").onclick = () => descargar("carta");
