@@ -727,20 +727,55 @@ def _entre(patron, texto, grupo=1):
     return a_texto(m.group(grupo)) if m else ""
 
 
-def _descargar(url):
+_CACHE_WEB = {}        # url -> (momento, html)   evita pedir dos veces lo mismo
+_ULTIMA_VISITA = {}    # dominio -> momento       espacia las peticiones
+ESPERA_ENTRE_PETICIONES = 1.5
+CACHE_SEGUNDOS = 900
+
+
+def _descargar(url, reintentos=1):
+    """Los portales limitan por ritmo, no solo por volumen: cacheamos, espaciamos
+    las peticiones por dominio y reintentamos una vez si contestan 429."""
+    ahora = time.time()
+    guardado = _CACHE_WEB.get(url)
+    if guardado and ahora - guardado[0] < CACHE_SEGUNDOS:
+        return guardado[1]
+
+    dominio = url.split("/")[2] if "/" in url else url
+    espera = ESPERA_ENTRE_PETICIONES - (ahora - _ULTIMA_VISITA.get(dominio, 0))
+    if espera > 0:
+        time.sleep(espera)
+    _ULTIMA_VISITA[dominio] = time.time()
+
     pet = urllib.request.Request(url, headers={
         "User-Agent": NAVEGADOR,
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
         "Accept-Encoding": "gzip, deflate",
     })
-    with urllib.request.urlopen(pet, timeout=25) as r:
-        crudo = r.read()
-        if r.headers.get("Content-Encoding") == "gzip":
-            crudo = gzip.decompress(crudo)
-        elif r.headers.get("Content-Encoding") == "deflate":
-            crudo = zlib.decompress(crudo, -zlib.MAX_WBITS)
-    return crudo.decode("utf-8", "ignore")
+    try:
+        with urllib.request.urlopen(pet, timeout=25) as r:
+            crudo = r.read()
+            if r.headers.get("Content-Encoding") == "gzip":
+                crudo = gzip.decompress(crudo)
+            elif r.headers.get("Content-Encoding") == "deflate":
+                crudo = zlib.decompress(crudo, -zlib.MAX_WBITS)
+    except urllib.error.HTTPError as ex:
+        if ex.code == 429 and reintentos > 0:
+            pausa = 6
+            try:
+                pausa = min(30, max(3, int(ex.headers.get("Retry-After", 6))))
+            except Exception:
+                pass
+            time.sleep(pausa)
+            return _descargar(url, reintentos - 1)
+        raise
+    texto = crudo.decode("utf-8", "ignore")
+    _CACHE_WEB[url] = (time.time(), texto)
+    if len(_CACHE_WEB) > 120:
+        for clave in sorted(_CACHE_WEB, key=lambda k: _CACHE_WEB[k][0])[:40]:
+            _CACHE_WEB.pop(clave, None)
+    return texto
 
 
 def _busca_jobposting(dato):
@@ -807,8 +842,18 @@ def leer_oferta(url):
     try:
         bruto = _descargar(destino)
     except urllib.error.HTTPError as ex:
-        raise RuntimeError("La web respondió %s (puede que bloquee la lectura automática). "
-                           "Abre la oferta, copia el texto y pégalo a mano." % ex.code)
+        if ex.code == 429:
+            raise RuntimeError(
+                "%s te ha limitado por ritmo (429): hoy le has pedido muchas ofertas seguidas. "
+                "No es un bloqueo permanente, se pasa en unos minutos.\n\nMientras tanto: usa el "
+                "botón de marcador estando en la oferta, o copia el texto y pégalo a mano."
+                % (dominio or "La web"))
+        if ex.code in (401, 403):
+            raise RuntimeError(
+                "%s no deja leer la oferta sin sesión (%s). Usa el botón de marcador desde tu "
+                "navegador, o copia el texto y pégalo a mano." % (dominio or "La web", ex.code))
+        raise RuntimeError("La web respondió %s. Copia el texto de la oferta y pégalo a mano."
+                           % ex.code)
     except Exception as ex:
         raise RuntimeError("No he podido abrir el enlace (%s). Pega el texto a mano." % ex)
 
@@ -905,6 +950,9 @@ def buscar_ofertas(texto, lugar, dias, fuentes):
             continue
         try:
             filas += fn(texto, lugar, dias)
+        except urllib.error.HTTPError as ex:
+            errores.append("%s: %s" % (nombre, "te ha limitado por ritmo (429), espera unos minutos"
+                                       if ex.code == 429 else "respondió %s" % ex.code))
         except Exception as ex:
             errores.append("%s: %s" % (nombre, ex))
     if "navegador" in (fuentes or []):
@@ -1344,6 +1392,47 @@ DEVUELVE ESTE JSON:
   "conocimientos": ["los que haya que añadir; [] si ninguno"]}}"""
 
 
+def prompt_conocimientos(cv):
+    material = {
+        "titular": cv.get("titular") or cv.get("identidad", {}).get("titular"),
+        "resumen": cv.get("resumen"),
+        "experiencia": [{"puesto": x.get("puesto"), "empresa": x.get("empresa"),
+                         "puntos": x.get("puntos", [])} for x in cv.get("experiencia", [])],
+        "proyectos": [{"nombre": x.get("nombre"), "texto": x.get("texto")}
+                      for x in cv.get("proyectos", [])],
+        "educacion": cv.get("educacion", []),
+        "certificados": cv.get("certificados", []),
+        "conocimientos_actuales": cv.get("conocimientos", []),
+    }
+    return f"""Saca de este CV los términos que un reclutador en España escribiría en el buscador
+para encontrar a esta persona, y que además pueda defender en una entrevista.
+
+=== CV ===
+{json.dumps(material, ensure_ascii=False, indent=1)}
+
+QUÉ BUSCO
+Entre 12 y 20 términos que NO estén ya en "conocimientos_actuales". Importa tanto lo de gestión
+como lo técnico: los filtros de los portales buscan cosas como "gestión de equipos",
+"automatización de procesos", "atención al cliente", "control de costes", "gestión de proveedores",
+"prompt engineering", "transformación digital", "mejora continua", "formación de usuarios".
+
+REGLA QUE NO SE ROMPE
+Cada término tiene que estar respaldado por algo concreto del CV: una frase de su experiencia, un
+proyecto o un certificado. Si no puedes señalar dónde, NO lo pongas. Nada de "liderazgo" porque
+suene bien: si dirigió una operación con personal y proveedores, entonces sí, y lo dices.
+
+CÓMO ESCRIBIRLOS
+- El término como lo buscaría el reclutador, en español, sin adornos ("Gestión de proveedores",
+  no "Excelente gestión de proveedores").
+- "evidencia": la frase del CV (recortada) que lo sostiene, para que pueda comprobarlo.
+- "tipo": "gestion", "tecnico" o "personal".
+- "riesgo": true solo si es defendible pero justo (por ejemplo, liderazgo de un equipo pequeño y
+  hace años); así sabrá cuáles mirar dos veces.
+
+DEVUELVE ESTE JSON:
+{{"sugeridos": [{{"termino": "...", "evidencia": "...", "tipo": "gestion", "riesgo": false}}]}}"""
+
+
 def aplicar_adaptacion(cv, res):
     nuevo = json.loads(json.dumps(cv))  # copia
     if res.get("titular"):
@@ -1733,6 +1822,18 @@ class Handler(BaseHTTPRequestHandler):
                                          datos.get("carta", {}), bases)
                 return self._json({"cv": nuevo, "anadidos": anadidos,
                                    "requisitos": medida["requisitos"], "cobertura": medida})
+
+            if ruta == "/api/sugerir-conocimientos":
+                cv = datos.get("cv") or cargar_base()
+                ok, texto = llamar_claude(prompt_conocimientos(cv))
+                if not ok:
+                    return self._json({"error": texto}, 502)
+                res = extraer_json(texto)
+                actuales = {str(c).strip().lower() for c in cv.get("conocimientos", [])}
+                limpios = [x for x in res.get("sugeridos", [])
+                           if isinstance(x, dict) and x.get("termino")
+                           and str(x["termino"]).strip().lower() not in actuales]
+                return self._json({"sugeridos": limpios})
 
             if ruta == "/api/anadir-experiencia":
                 cv = datos.get("cv") or cargar_base()

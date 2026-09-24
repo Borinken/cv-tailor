@@ -184,6 +184,67 @@ function cajaFoto() {
   ]);
 }
 
+function cajaSugerirConocimientos() {
+  const caja = crear("div", { className: "sugerir-con" });
+  const nota = crear("p", { className: "estado" });
+  const lista = crear("div", { className: "lista-terminos" });
+  const boton = crear("button", { className: "btn ancho",
+    textContent: "Sugerir palabras que buscan los reclutadores" });
+
+  boton.onclick = async () => {
+    boton.disabled = true;
+    lista.textContent = "";
+    try {
+      const r = await conEstado(nota, "Buscando en tu propia experiencia…",
+        () => api("/api/sugerir-conocimientos", { cv }));
+      const sugeridos = r.sugeridos || [];
+      if (!sugeridos.length) {
+        nota.className = "estado";
+        nota.textContent = "No he encontrado nada nuevo que puedas defender.";
+      } else {
+        nota.className = "estado ok";
+        nota.textContent = sugeridos.length + " términos, cada uno con la frase de tu CV que lo sostiene. " +
+          "Marca los que quieras y añádelos.";
+        sugeridos.forEach((s) => {
+          const marca = crear("input", { type: "checkbox", checked: !s.riesgo });
+          const fila = crear("label", { className: "termino" + (s.riesgo ? " justo" : "") }, [
+            marca,
+            crear("span", {}, [
+              crear("b", { textContent: s.termino }),
+              crear("em", { className: "tipo", textContent: s.tipo || "" }),
+              crear("span", { className: "evidencia", textContent: s.evidencia || "" }),
+            ]),
+          ]);
+          fila.dataset.termino = s.termino;
+          lista.append(fila);
+        });
+        const anadir = crear("button", { className: "btn ancho", textContent: "Añadir los marcados" });
+        anadir.onclick = () => {
+          let puestos = 0;
+          lista.querySelectorAll(".termino").forEach((f) => {
+            const marcado = f.querySelector("input").checked;
+            const t = f.dataset.termino;
+            if (marcado && !cv.conocimientos.some((x) => String(x).toLowerCase() === t.toLowerCase())) {
+              cv.conocimientos.push(t);
+              puestos++;
+            }
+          });
+          pintarEditor(); refrescar();
+          alert(puestos + " términos añadidos al final de Conocimientos. Reordénalos a tu gusto " +
+                "y pulsa «Guardar en este perfil» si quieres que se queden.");
+        };
+        lista.append(anadir);
+      }
+    } catch (e) { /* el estado ya lo dice */ }
+    boton.disabled = false;
+  };
+
+  caja.append(crear("p", { className: "ayuda", textContent:
+    "Saca términos de gestión, IA y trato con cliente que ya están respaldados por tu experiencia. " +
+    "No inventa: cada uno viene con la frase de tu CV que lo sostiene." }), boton, nota, lista);
+  return caja;
+}
+
 function pintarEditor() {
   const cont = $("#tab-contenido");
   cont.innerHTML = "";
@@ -236,6 +297,7 @@ function pintarEditor() {
   cont.append(acordeon("Conocimientos", [
     campo("Uno por línea. El orden es el que sale en el CV.", cv.conocimientos.join("\n"),
       (v) => (cv.conocimientos = lineas(v)), { filas: 12 }),
+    cajaSugerirConocimientos(),
   ]));
 
   cont.append(acordeon("Proyectos", [

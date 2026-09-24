@@ -250,3 +250,13 @@ input:focus,textarea:focus,select:focus{outline:2px solid #c7d7f0;border-color:v
 .perdidas b{display:block;font-size:12.8px;color:#92400e;margin-bottom:3px}
 .perdidas span{display:block;font-size:12.3px;color:#78350f;margin-bottom:8px}
 .palabra.perfil{background:#fef3c7;color:#92400e}
+.sugerir-con{border-top:1px dashed var(--linea);margin-top:6px;padding-top:10px}
+.lista-terminos{margin-top:10px;display:flex;flex-direction:column;gap:7px}
+.termino{display:flex;gap:9px;align-items:flex-start;background:#fcfcfd;border:1px solid var(--linea);
+  border-radius:9px;padding:9px 10px;margin:0;font-weight:400;cursor:pointer}
+.termino input{width:auto;margin:2px 0 0}
+.termino b{font-size:12.8px;font-weight:700}
+.termino .tipo{font-style:normal;font-size:10px;font-weight:700;margin-left:7px;padding:1px 7px;
+  border-radius:999px;background:#eef2f8;color:#475569;text-transform:uppercase}
+.termino .evidencia{display:block;font-size:11.8px;color:var(--gris);margin-top:3px;line-height:1.35}
+.termino.justo{background:#fffbeb;border-color:#fde68a}

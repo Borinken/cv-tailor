@@ -102,6 +102,17 @@ and the CLI has to be logged in (`claude auth login`). When it is not, the app
 falls back to a **manual mode** — copy the prompt, paste it into any Claude
 window, paste the JSON back. Same result, zero setup.
 
+### Skills come from the CV, not from a list
+
+Recruiters search for `gestión de equipos`, `automatización de procesos`,
+`atención al cliente` — terms a technical CV usually omits. Padding the skills
+section with them is how CVs become fiction.
+
+Instead the app mines those terms *from the candidate's own history*: it returns
+each suggested keyword together with the sentence, project or certificate that
+backs it, and flags the ones that are defensible but thin, so they can be
+rehearsed or dropped. Nothing is added without a receipt.
+
 ### Why every template is a single column
 
 Six templates ship, all with the body content in one column. Two-column CVs
@@ -125,6 +136,11 @@ Contact icons are inline SVG rather than emoji, so extracted text stays clean:
   the page the user is already looking at, tries to POST it to the local app,
   and falls back to the clipboard when the site's policy forbids that. No
   scraping of sites that say no, no credentials involved.
+
+Portals rate-limit by pace, not just by volume, so every fetch goes through a
+15-minute cache and a 1.5 s spacing per host. A `429` is retried once, honouring
+`Retry-After`, and then reported as what it is — a temporary throttle, not a
+ban — with the bookmarklet offered as the way through.
 
 ### Chrome headless is not a print button
 
@@ -160,6 +176,7 @@ rows. The estimator is calibrated against real PDFs at four font sizes.
 | Weekly job search with 24 h / 3 d / 7 d filter | ✅ |
 | Sector-aware rewrite with a no-invention constraint | ✅ |
 | Requirement triage + literal keyword coverage check | ✅ |
+| Keyword mining — pulls recruiter search terms out of your own history, each shown with the sentence that backs it | ✅ |
 | Gap recovery from other profiles, verbatim, no model call | ✅ |
 | Cover letter, editable, exported alongside the CV | ✅ |
 | PDF export: CV, letter, or both in one file | ✅ |
