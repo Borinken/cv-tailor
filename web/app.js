@@ -884,6 +884,51 @@ $("#btnPreparar").onclick = async () => {
   $("#btnPreparar").disabled = false;
 };
 
+$("#btnAuditar").onclick = async () => {
+  const nodo = $("#estadoAuditoria");
+  const caja = $("#auditoria");
+  $("#btnAuditar").disabled = true;
+  caja.textContent = "";
+  try {
+    const r = await conEstado(nodo, "Generando el PDF y leyéndolo como un ATS…",
+      () => api("/api/auditoria", { cv, carta, ajustes: leerAjustes() }));
+
+    const resumen = crear("div", { className: "resumen-auditoria" + (r.fallan ? " mal" : " bien") }, [
+      crear("b", { textContent: r.fallan
+        ? r.fallan + (r.fallan === 1 ? " cosa que arreglar" : " cosas que arreglar")
+        : "Pasa todas las comprobaciones" }),
+      crear("span", { textContent: r.caracteres + " caracteres legibles · " + r.paginas +
+        (r.paginas === 1 ? " página" : " páginas") + " · " + r.concretos +
+        "% de tus puntos llevan un dato o una cifra" }),
+    ]);
+    caja.append(resumen);
+
+    r.pruebas.forEach((p) => {
+      caja.append(crear("div", { className: "chequeo " + (p.ok ? "si" : "no") }, [
+        crear("span", { className: "icono", textContent: p.ok ? "✓" : "✕" }),
+        crear("div", {}, [
+          crear("b", { textContent: p.titulo }),
+          crear("span", { textContent: p.detalle || "" }),
+        ]),
+      ]));
+    });
+
+    if (r.señales && r.señales.length) {
+      caja.append(crear("div", { className: "senales" }, [
+        crear("b", { textContent: "Huele a texto de IA (lo nota el humano, no el filtro):" }),
+        ...r.señales.map((s) => crear("span", { className: "senal",
+          textContent: s.tipo + ": " + s.texto })),
+      ]));
+    } else {
+      caja.append(crear("div", { className: "senales limpio" }, [
+        crear("b", { textContent: "Sin muletillas ni patrones típicos de IA." })]));
+    }
+    nodo.className = "estado " + (r.fallan ? "mal" : "ok");
+    nodo.textContent = r.fallan ? "Revisa lo marcado en rojo." : "Listo para enviar.";
+  } catch (e) { /* el estado lo dice */ }
+  $("#btnAuditar").disabled = false;
+};
+
 const abrir = (que, valor) => api("/api/abrir", { que, valor });
 $("#btnAbrirOferta").onclick = () => {
   const url = $("#of-url").value.trim();

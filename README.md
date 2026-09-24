@@ -154,6 +154,26 @@ Two behaviours cost real debugging time and are worth knowing:
   `--headless=old`, which needs no display services, and explains the cause if
   both fail.
 
+### The ATS check reads the PDF back, it does not guess
+
+Most "ATS-friendly" advice is folklore. This one exports the real PDF, runs
+`pdftotext` over it — the same extraction an applicant tracking system does —
+and asserts on what comes out: name in the first lines, email and phone
+recoverable, every employer and date present, **every bullet still findable**,
+standard section headings, consistent dates, page count, and whether the
+posting's job title appears at all.
+
+A failing check names the sentence that disappeared. The first run against a
+real CV caught a bullet lost to `pdftotext -layout` collapsing whitespace — a
+bug in the checker itself, which is exactly the kind of thing an opinion-based
+checklist never surfaces.
+
+It also flags what makes a reader think "a model wrote this": banned clichés,
+em dashes inside prose, three or more bullets opening with the same verb,
+sentences past 45 words, and the share of bullets carrying a concrete number —
+the one metric that correlates with a CV reading as written by a person who did
+the work.
+
 ### Page count is measured, not estimated
 
 "Fit in two pages" is verified by rendering the real PDF and counting its pages,
@@ -181,6 +201,8 @@ rows. The estimator is calibrated against real PDFs at four font sizes.
 | Cover letter, editable, exported alongside the CV | ✅ |
 | PDF export: CV, letter, or both in one file | ✅ |
 | Auto-fit to two pages, verified against the real PDF | ✅ |
+| ATS audit — re-reads the exported PDF the way a parser would and reports what is lost | ✅ |
+| AI-writing tells — clichés, em dashes, repeated openings, over-long bullets | ✅ |
 | ES ⇄ EN translation, section headings included | ✅ |
 | Application tracker: prepared → sent → replied → interview | ✅ |
 | Email draft with the PDFs attached (macOS Mail) | ✅ |

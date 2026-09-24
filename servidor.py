@@ -976,6 +976,144 @@ def contar_paginas(ruta_pdf):
         return max(1, f.read().count(b"/Type /Page") - f.read().count(b"/Type /Pages"))
 
 
+# ------------------------------------------------------------------ auditoría ATS
+MULETILLAS = [
+    "sólida experiencia", "solida experiencia", "amplia experiencia", "altamente",
+    "apasionado", "proactivo", "orientado a resultados", "entorno dinámico", "sinergia",
+    "valor añadido", "profesional versátil", "exhaustivo", "robusto", "potente",
+    "no solo", "en un mundo cada vez más", "me dirijo a ustedes", "tengo el placer",
+    "quedo a su entera disposición", "de cara a", "a nivel de", "proven track record",
+    "results-driven", "passionate", "leverage", "seasoned", "dynamic environment",
+    "cutting-edge", "synergy", "spearheaded", "value-add", "detail-oriented",
+]
+ENCABEZADOS_OK = ["experiencia", "experience", "educación", "educacion", "education",
+                  "conocimientos", "skills", "idiomas", "languages", "certificados",
+                  "certificates", "proyectos", "projects"]
+
+
+def texto_de_pdf(ruta):
+    r = subprocess.run(["pdftotext", "-layout", ruta, "-"], capture_output=True, text=True, timeout=60)
+    return r.stdout or ""
+
+
+def _trozo(frase, palabras=6):
+    limpio = _normaliza(frase).split()
+    return " ".join(limpio[:palabras])
+
+
+def auditar(cv, carta=None, ajustes=None):
+    """Genera el PDF de verdad, le saca el texto como haría un ATS y comprueba
+    qué se pierde por el camino. Sin opiniones: o el dato está o no está."""
+    carpeta = tempfile.mkdtemp(prefix="audit_")
+    try:
+        ruta = os.path.join(carpeta, "cv.pdf")
+        html_a_pdf(render_cv(cv), ruta)
+        paginas = contar_paginas(ruta)
+        crudo = texto_de_pdf(ruta)
+    finally:
+        shutil.rmtree(carpeta, ignore_errors=True)
+    texto = _normaliza(crudo)
+    idn = cv.get("identidad", {})
+    pruebas = []
+
+    def prueba(clave, titulo, ok, detalle="", peso="alto"):
+        pruebas.append({"clave": clave, "titulo": titulo, "ok": bool(ok),
+                        "detalle": detalle, "peso": peso})
+
+    prueba("texto", "El PDF tiene texto seleccionable",
+           len(crudo.strip()) > 400,
+           "%d caracteres extraídos" % len(crudo.strip()))
+    primeras = _normaliza(" ".join(crudo.splitlines()[:4]))
+    nombre = _normaliza(idn.get("nombre", ""))
+    prueba("nombre", "Tu nombre está arriba del todo",
+           nombre and nombre.split()[0] in primeras,
+           "el ATS toma el nombre de las primeras líneas")
+    prueba("email", "El email se puede extraer",
+           _normaliza(idn.get("email", "")).replace(" ", "") in texto.replace(" ", ""),
+           idn.get("email", ""))
+    digitos = re.sub(r"[^0-9]", "", idn.get("telefono", ""))[-9:]
+    prueba("telefono", "El teléfono se puede extraer",
+           digitos and digitos in re.sub(r"[^0-9]", "", crudo),
+           idn.get("telefono", ""))
+
+    faltan_empleos = []
+    for x in cv.get("experiencia", []):
+        empresa_ok = _normaliza(x.get("empresa", "")) in texto if x.get("empresa") else True
+        periodo = re.sub(r"[^0-9]", "", x.get("periodo", ""))
+        periodo_ok = (periodo[:6] in re.sub(r"[^0-9]", "", crudo)) if periodo else True
+        if not (empresa_ok and periodo_ok):
+            faltan_empleos.append(x.get("empresa") or x.get("puesto"))
+    prueba("empleos", "Empresas y fechas se leen en todos los empleos",
+           not faltan_empleos, ", ".join(faltan_empleos) or "%d empleos" % len(cv.get("experiencia", [])))
+
+    perdidos = []
+    for x in cv.get("experiencia", []):
+        for punto in x.get("puntos", []):
+            if _trozo(punto) and _trozo(punto) not in texto:
+                perdidos.append(punto[:60])
+    prueba("puntos", "No se pierde ningún punto de tu experiencia",
+           not perdidos, "se pierden %d: %s" % (len(perdidos), "; ".join(perdidos[:2])) if perdidos else "")
+
+    encontrados = [h for h in ENCABEZADOS_OK if h in texto]
+    prueba("secciones", "Usa encabezados que el ATS reconoce",
+           len(encontrados) >= 3, ", ".join(sorted(set(encontrados))[:6]))
+
+    fechas = re.findall(r"\b(\d{2}/\d{4}|\d{4})\b", crudo)
+    prueba("fechas", "Las fechas están en un formato estándar",
+           len(fechas) >= 2, "%d fechas detectadas (MM/AAAA o AAAA)" % len(fechas), "medio")
+
+    prueba("paginas", "Ocupa 2 páginas o menos", paginas <= 2, "%d páginas" % paginas)
+
+    titulo_oferta = _normaliza((ajustes or {}).get("puesto", ""))
+    if titulo_oferta:
+        palabras = [p for p in titulo_oferta.split() if len(p) > 3]
+        aciertos = [p for p in palabras if p in texto]
+        oferta_en_ingles = bool(re.search(r"\b(specialist|engineer|manager|developer|analyst|"
+                                          r"officer|consultant|lead)\b", titulo_oferta))
+        cv_en_ingles = cv.get("idioma") == "en"
+        aviso = "%d de %d palabras del título: %s" % (len(aciertos), len(palabras), " ".join(aciertos))
+        if oferta_en_ingles and not cv_en_ingles:
+            aviso += " — la oferta está en inglés y tu CV en español: pásalo con el botón English"
+        prueba("titulo", "El puesto de la oferta aparece en tu CV",
+               len(aciertos) >= max(1, len(palabras) // 2), aviso)
+
+    # --- señales de texto escrito por una máquina ---
+    señales = []
+    bajo = crudo.lower()
+    for m in MULETILLAS:
+        if m in bajo:
+            señales.append({"tipo": "muletilla", "texto": m})
+    redactado = " ".join([cv.get("resumen", "")] +
+                         [p for x in cv.get("experiencia", []) for p in x.get("puntos", [])] +
+                         list((carta or {}).get("parrafos", [])))
+    rayas = redactado.count("—")
+    if rayas > 1:
+        señales.append({"tipo": "puntuación",
+                        "texto": "%d rayas largas (—) dentro del texto: los humanos casi no las usan" % rayas})
+    largos, inicios = [], {}
+    for x in cv.get("experiencia", []):
+        for punto in x.get("puntos", []):
+            palabras = punto.split()
+            if len(palabras) > 45:
+                largos.append(punto[:70])
+            if palabras:
+                inicios.setdefault(_normaliza(palabras[0]), []).append(punto[:40])
+    if largos:
+        señales.append({"tipo": "frases largas", "texto": "%d puntos de más de 45 palabras" % len(largos)})
+    repes = [k for k, v in inicios.items() if len(v) >= 3 and k]
+    if repes:
+        señales.append({"tipo": "repetición", "texto": "3+ puntos empiezan igual: %s" % ", ".join(repes[:3])})
+    con_dato = sum(1 for x in cv.get("experiencia", []) for p in x.get("puntos", [])
+                   if re.search(r"\d", p))
+    total_puntos = sum(len(x.get("puntos", [])) for x in cv.get("experiencia", []))
+    concretos = round(100 * con_dato / total_puntos) if total_puntos else 0
+
+    fallan = [x for x in pruebas if not x["ok"]]
+    return {"paginas": paginas, "pruebas": pruebas, "fallan": len(fallan),
+            "señales": señales, "concretos": concretos, "puntos": total_puntos,
+            "caracteres": len(crudo.strip())}
+
+
 # --------------------------------------------------------------------------- IA
 SISTEMA = ("Eres un redactor experto de currículums y cartas de presentación en España. "
            "Respondes SIEMPRE con un único objeto JSON válido, sin texto antes ni después, sin ```. "
@@ -1243,7 +1381,7 @@ def aplicar_traduccion(cv, carta, res, idioma):
 def _normaliza(t):
     t = unicodedata.normalize("NFKD", str(t or "").lower())
     t = "".join(c for c in t if not unicodedata.combining(c))
-    return re.sub(r"[^a-z0-9ñ ]+", " ", t)
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9ñ ]+", " ", t)).strip()
 
 
 def texto_del_cv(cv):
@@ -1631,6 +1769,10 @@ class Handler(BaseHTTPRequestHandler):
                 if tipo == "conjunto":
                     return self._json({"html": render_conjunto(cv, datos.get("carta", {}))})
                 return self._json({"html": render_cv(cv)})
+
+            if ruta == "/api/auditoria":
+                return self._json(auditar(datos.get("cv", {}), datos.get("carta"),
+                                          datos.get("ajustes")))
 
             if ruta == "/api/paginas":
                 cv = datos.get("cv", {})
