@@ -2760,6 +2760,19 @@ def arrancar_auto():
     return True
 
 
+SITIOS = ("www.workana.com", "workana.com",
+          "www.freelancer.es", "www.freelancer.com", "www.freelancermap.com")
+
+
+def sitio_permitido(url):
+    """Host EXACTO de la lista. Un `in url` casa con malo.com/?x=workana.com."""
+    try:
+        t = urllib.parse.urlsplit(url or "")
+    except Exception:
+        return False
+    return t.scheme in ("http", "https") and t.hostname in SITIOS
+
+
 def _url_puja(url):
     """Donde se escribe la propuesta en cada sitio. Igual que urlPropuesta() del
     panel, pero aqui hace falta para el piloto automatico."""
@@ -3667,8 +3680,6 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", tipo)
         self.send_header("Content-Length", str(len(cuerpo)))
         self.send_header("Cache-Control", "no-store")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Private-Network", "true")
         for k, v in (extra or {}).items():
             self.send_header(k, v)
         self.end_headers()
@@ -3683,10 +3694,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         self.send_response(204)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        self.send_header("Access-Control-Allow-Private-Network", "true")
+        self.send_header("Allow", "POST, GET")
         self.end_headers()
 
     def do_GET(self):
@@ -3770,7 +3778,20 @@ class Handler(BaseHTTPRequestHandler):
                 return self._envia(200, f.read(), tipo)
         return self._envia(404, "no encontrado", "text/plain; charset=utf-8")
 
+    def _mismo_sitio(self):
+        """Origin de otra pagina = peticion de otra web, no del panel."""
+        o = self.headers.get("Origin")
+        if not o:
+            return True
+        try:
+            h = urllib.parse.urlsplit(o).hostname
+        except Exception:
+            return False
+        return h in ("127.0.0.1", "localhost", "::1")
+
     def do_POST(self):
+        if not self._mismo_sitio():
+            return self._json({"error": "peticion de otra pagina"}, 403)
         ruta = self.path.split("?")[0]
         try:
             datos = self._cuerpo()
