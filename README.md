@@ -218,6 +218,58 @@ rows. The estimator is calibrated against real PDFs at four font sizes.
 | ES ⇄ EN translation, section headings included | ✅ |
 | Application tracker: prepared → sent → replied → interview | ✅ |
 | Email draft with the PDFs attached (macOS Mail) | ✅ |
+| Freelance board: Workana, Freelancer.es and Freelancermap in one list | ✅ |
+| Bid triage — integrity, capability and money, each with its reason | ✅ |
+| Budgets normalised across six currencies, original kept in the tooltip | ✅ |
+| Proposal drafting with an explicit scope block and a per-site length cap | ✅ |
+| Autopilot: one bid a day — draft, fill, submit, verify, notify | ✅ |
+| Submitted-proposals log with the full text of what was promised | ✅ |
+
+## Bidding is rationed, not filtered
+
+A free Freelancer.es account gets 6 bids a month; a Workana account at the
+entry level gets 2 contacts a week. That is roughly eight shots a month, so the
+triage is not there to tidy the list — it decides where the ammunition goes.
+
+Three things disqualify a project, and each says so on the card:
+
+- **Integrity** — fake viewers, deepfakes, captcha bypass, gambling. The
+  patterns are kept in both Spanish and English, because half the adverts are
+  in English and `apuestas automáticas` does not match *Sports Betting
+  Automation Bot*.
+- **Capability** — PLC, SAP, Revit, 3D, native mobile, graphic design.
+- **Money** — not an estimate of how long the job takes. In a listing the
+  description arrives truncated to 300 characters, and an hour estimate derived
+  from a fragment is an invented number that then decides things. What *is* a
+  fact is **how many hours the budget pays at your rate**, so that is the test.
+
+## A click is not a submission
+
+The first version called `element.click()` and registered the bid as sent. It
+was wrong twice over. The generic selector `button[type=submit]` matched the
+*Cancel* button of a hidden modal that sits earlier in the DOM, and the
+"did it work?" check looked for the words *Your proposal* in the page — which
+is the form's own label. Both reported success; nothing had been submitted.
+
+Submission is now confirmed against the platform's own remaining-bids counter,
+read before and after. If the number does not move, it did not go out, and the
+run says so instead of logging a send.
+
+## Filling a form on another origin
+
+A page served from `localhost` cannot write into a form on `workana.com`; the
+browser forbids it, which is why a bookmarklet was the original answer. Two
+routes now do it from outside the page, and either one is enough:
+
+- a separate Chrome with its own profile, driven over the DevTools protocol
+  (`cdp.mjs`, no dependencies — Node 22 ships `WebSocket`);
+- the user's own Chrome via AppleScript, which needs *View › Developer › Allow
+  JavaScript from Apple Events* switched on once.
+
+Waiting is done on the element, never on a timer. Cloudflare interstitials and
+single-page apps take as long as they take, and a fixed delay produced a blank
+page whose failure read as "this page has no form" — which sends you looking in
+the wrong place.
 
 ## Roadmap
 

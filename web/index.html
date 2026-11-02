@@ -11,6 +11,7 @@
   <div class="marca">Adaptador de CV <span id="estadoIA" class="pill pill-gris">IA sin probar</span></div>
   <nav class="vistas">
     <button class="vbtn activa" data-vista-principal="panel">Panel</button>
+    <button class="vbtn" data-vista-principal="freelance">Freelance</button>
     <button class="vbtn" data-vista-principal="editor">Editor del CV</button>
   </nav>
   <div class="acciones" id="acciones-editor">
@@ -57,18 +58,44 @@
       <span class="campo"><span class="lupa">🔎</span>
         <input id="bu-texto" placeholder="desarrollador, java, backend…"></span>
       <span class="campo"><span class="lupa">📍</span>
-        <input id="bu-lugar" placeholder="Málaga"></span>
+        <input id="bu-lugar" placeholder="Málaga" list="lugares-frecuentes">
+        <datalist id="lugares-frecuentes">
+          <option value="Málaga"></option>
+          <option value="España"></option>
+          <option value="Madrid"></option>
+          <option value="Barcelona"></option>
+          <option value="Puerto Rico"></option>
+          <option value="Estados Unidos"></option>
+        </datalist></span>
+      <select id="bu-pais" title="Dónde buscar">
+        <option value="">Dónde…</option>
+        <option value="Málaga">Málaga</option>
+        <option value="España">España</option>
+        <option value="Puerto Rico">Puerto Rico</option>
+        <option value="Estados Unidos">Estados Unidos</option>
+      </select>
       <span class="segmentos" id="bu-plazo">
         <button data-dias="1">24 h</button>
         <button data-dias="3">3 días</button>
         <button data-dias="7" class="activa">7 días</button>
+        <button data-dias="30">30 días</button>
       </span>
+      <span class="segmentos" id="bu-modo">
+        <button data-modo="" class="activa">Todas</button>
+        <button data-modo="remoto">Remoto</button>
+        <button data-modo="hibrido">Híbrido</button>
+        <button data-modo="presencial">Presencial</button>
+      </span>
+      <span class="campo"><span class="lupa">👥</span>
+        <input id="bu-gente" type="number" min="0" step="5" value="25" style="width:4.5em"
+               title="Descarta las ofertas con más solicitantes. Déjalo vacío para no filtrar."></span>
       <button id="btnBuscar" class="btn">Buscar</button>
     </div>
 
     <div class="chips-fuente">
       <button class="chip-f activa" data-fuente="linkedin">LinkedIn</button>
       <button class="chip-f activa" data-fuente="tecnoempleo">Tecnoempleo</button>
+      <button class="chip-f activa" data-fuente="michaelpage">Michael Page</button>
       <button class="chip-f activa" data-fuente="navegador">Infojobs (por marcador)</button>
       <details class="acordeon acordeon-fino comoinfo">
         <summary>¿Cómo traigo las de Infojobs?</summary>
@@ -89,6 +116,32 @@
     <div id="ofertas" class="ofertas"></div>
   </section>
 
+  <!-- Workana va aparte de las ofertas de empleo: aquí no se manda un CV, se
+       escribe una propuesta y se compite por precio contra otros freelancers. -->
+
+  <section class="tarjeta bloque-recomendadas">
+    <div class="cabeza-seccion">
+      <div>
+        <h3>✨ Sugeridas por Claude para tu perfil</h3>
+        <span class="ayuda">Revisadas una a una contra tu CV. Ordenadas por encaje: empieza por arriba.</span>
+      </div>
+      <div class="filtros-reco">
+      <span class="segmentos peq" id="estado-reco">
+        <button data-estado="pendiente" class="activa">Por aplicar</button>
+        <button data-estado="enviada">Enviadas</button>
+        <button data-estado="descartada">Descartadas</button>
+      </span>
+      <span class="segmentos peq" id="filtro-reco">
+        <button data-fuente="" class="activa">Todas</button>
+        <button data-fuente="linkedin">LinkedIn</button>
+        <button data-fuente="infojobs">InfoJobs</button>
+      </span>
+      </div>
+    </div>
+    <p id="reco-nota" class="ayuda"></p>
+    <div id="recomendadas" class="recomendadas"></div>
+  </section>
+
   <section class="tarjeta">
     <div class="cabeza-seccion">
       <h3>Trabajos aplicados</h3>
@@ -100,6 +153,114 @@
       </span>
     </div>
     <div id="aplicados" class="aplicados"></div>
+  </section>
+</main>
+
+<main id="freelance" hidden>
+  <header class="panel-cab">
+    <div>
+      <h1>Trabajo freelance</h1>
+      <p class="ayuda">Proyectos abiertos en Workana, Freelancer.es, Freelancermap y Mercor. Aquí no se
+        manda el CV: se escribe una propuesta y se compite contra otros freelancers.</p>
+    </div>
+  </header>
+
+  <!-- Dos vistas: las que valen la pena y las que ya se mandaron. Se separan
+       porque son dos preguntas distintas: "¿a qué pujo?" y "¿qué prometí?". -->
+  <nav class="segmentos" id="fl-vistas">
+    <button data-sub="oportunidades" class="activa">Oportunidades</button>
+    <button data-sub="enviadas">Propuestas enviadas</button>
+  </nav>
+
+  <!-- El piloto: una tanda al día, sin tocar nada. El cupo va aquí porque es
+       lo que de verdad limita: 6 pujas al mes en Freelancer, 2 por semana en
+       Workana. Con eso no se puja a todo, se raciona. -->
+  <section class="tarjeta bloque-auto" id="fl-auto">
+    <div class="cabeza-seccion">
+      <div>
+        <h3>🤖 Piloto automático</h3>
+        <span class="ayuda" id="auto-estado">Apagado.</span>
+      </div>
+      <div class="filtros-reco">
+        <button id="btnAutoAhora" class="btn-mini">Hacer una tanda ahora</button>
+        <button id="btnAuto" class="btn">▶ Start</button>
+      </div>
+    </div>
+    <div class="cupo-fila">
+      <span class="ayuda" id="auto-cupo"></span>
+      <button id="btnCupo" class="btn-mini">Corregir cupo</button>
+      <button id="btnNavegador" class="btn-mini"
+              title="Chrome aparte, con su propio perfil: no toca el tuyo. Inicia sesión una vez en Workana y Freelancer.es dentro de esa ventana y el panel ya puede enviar solo.">Abrir el navegador del panel</button>
+    </div>
+    <p class="ayuda" id="auto-diario"></p>
+  </section>
+
+  <section class="tarjeta bloque-enviadas" id="fl-enviadas" hidden>
+    <div class="cabeza-seccion">
+      <div>
+        <h3>✅ Propuestas enviadas</h3>
+        <span class="ayuda">Lo que prometiste y por cuánto. Se guarda el texto entero:
+          dentro de un mes es la única forma de saber a qué te comprometiste.</span>
+      </div>
+    </div>
+    <div id="enviadas"></div>
+  </section>
+
+  <section class="tarjeta bloque-workana" id="fl-oportunidades">
+    <div class="cabeza-seccion">
+      <div>
+        <h3>🧩 Workana</h3>
+        <span class="ayuda"><b>Preparar propuesta</b> redacta la tuya cubriendo lo que piden,
+          con tus palabras y solo con lo que has hecho. No la envía: la revisas y la mandas tú.</span>
+      </div>
+      <div class="filtros-reco">
+        <input id="wk-texto" type="search" placeholder="filtrar: python, whatsapp, api…"
+               title="Filtra por título, descripción o habilidades pedidas" style="min-width:12em">
+        <span class="segmentos peq" id="wk-plazo">
+          <button data-horas="24">24 h</button>
+          <button data-horas="72">3 días</button>
+          <button data-horas="99999" class="activa">Todo</button>
+        </span>
+        <span class="ayuda">Máx. propuestas
+          <input id="wk-competencia" type="number" min="0" step="5" value="" placeholder="sin tope"
+                 style="width:5.5em"
+                 title="Vacío = no filtra. Las propuestas salen igual en cada tarjeta."></span>
+        <span class="segmentos peq" id="wk-aptas"
+              title="«Solo aptas» deja las que pasan el filtro: sabes hacerlas, no son fraude y el presupuesto deja sobrante sobre tu tarifa">
+          <button data-aptas="1" class="activa">Solo aptas</button>
+          <button data-aptas="0">Todas</button>
+        </span>
+        <span class="segmentos peq" id="wk-moneda" title="Los presupuestos llegan en seis monedas; se convierten para poder compararlos">
+          <button data-moneda="EUR" class="activa">€</button>
+          <button data-moneda="USD">$</button>
+          <button data-moneda="orig">original</button>
+        </span>
+        <button id="btnWorkana" class="btn-mini">Actualizar</button>
+      </div>
+    </div>
+    <div class="chips-fuente">
+      <button class="chip-w activa" data-fuente="Workana">Workana</button>
+      <button class="chip-w activa" data-fuente="Freelancer">Freelancer.es</button>
+      <button class="chip-w activa" data-fuente="Freelancermap">Freelancermap</button>
+      <button class="chip-w activa" data-fuente="Mercor">Mercor</button>
+    </div>
+    <div hidden>
+    </div>
+    <details class="acordeon acordeon-fino comoinfo">
+      <summary>El marcador que rellena la propuesta en Workana (se instala una vez)</summary>
+      <div class="interior">
+        <p class="ayuda">Workana no deja que este panel escriba en su web, así que lo hace
+          este marcador. <b>Arrástralo a la barra de marcadores del navegador</b> — solo una vez.
+          Si no lo instalas, el botón del panel abre la oferta pero no rellena nada: es este
+          marcador el que escribe en el formulario.</p>
+        <p><a class="btn marcador marcador-workana" href="javascript:(async function(){try{var d=null;var m=(location.hash||&quot;&quot;).match(/cvt=([^&amp;]+)/);if(m){ try{ d=JSON.parse(decodeURIComponent(escape(atob(m[1])))); }catch(e){} }if(!d){ try{ d=JSON.parse(await navigator.clipboard.readText()); }catch(e){} }if(!d||d.cvtailor!==&quot;propuesta&quot;){alert(&quot;No encuentro la propuesta. Vuelve al panel y pulsa «Abrir en Workana con todo puesto».&quot;);return;}function poner(sel,v){var e=document.querySelector(sel);if(!e||v===&quot;&quot;||v==null)return 0;var proto=e.tagName===&quot;TEXTAREA&quot;?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,&quot;value&quot;).set.call(e,v);[&quot;input&quot;,&quot;change&quot;,&quot;blur&quot;].forEach(function(ev){e.dispatchEvent(new Event(ev,{bubbles:true}))});return 1;}var n=0;n+=poner(&#x27;textarea[name=&quot;bid[content]&quot;]&#x27;,d.texto);n+=poner(&#x27;input[name=&quot;bid[hours]&quot;]&#x27;,d.horas);n+=poner(&#x27;input[name=&quot;bid[amount]&quot;]&#x27;,d.importe);n+=poner(&#x27;input[name=&quot;bid[deliveryTime]&quot;]&#x27;,d.plazo);if(!n){alert(&quot;Esta no es la pagina del formulario. Pulsa antes «Envia una propuesta».&quot;);return;}alert(n+&quot; de 4 campos rellenos. Adjunta tus capturas, revisa y pulsa Enviar presupuesto.&quot;);}catch(e){alert(&quot;Fallo al rellenar: &quot;+e.message);}})()">✍️ Rellenar propuesta</a></p>
+        <p class="ayuda">Después: en el panel pulsas «Abrir en Workana con todo puesto», se abre
+          el formulario del proyecto, pulsas ahí el marcador y se rellenan los cuatro campos.
+          Revisas y envías tú.</p>
+      </div>
+    </details>
+    <p id="wk-estado" class="estado"></p>
+    <div id="workana" class="ofertas"></div>
   </section>
 </main>
 

@@ -44,6 +44,50 @@ Arriba tienes dos vistas: **Panel** y **Editor del CV**.
 - **Trabajos aplicados**: cada candidatura preparada aparece con su estado (preparada, enviada,
   respondida, entrevista, descartada). Cambias el estado desde el propio desplegable.
 
+### Freelance
+La tercera vista. Aquí no se manda el CV: se escribe una propuesta y se compite contra otros
+freelancers. Trae proyectos abiertos de **Workana**, **Freelancer.es** y **Freelancermap**.
+
+**El filtro es lo importante, y no es un filtro cualquiera: es un racionador.** Con cuenta
+gratuita son unas **6 pujas al mes en Freelancer.es** y **2 contactos por semana en Workana**,
+y el de Workana sube con el nivel y con el plan — por eso el cupo es editable desde el panel.
+Son unas 8 al mes: pujar a todo no es una opción, así que cada proyecto pasa
+por `evaluar_proyecto()`, que lo descarta por tres motivos y lo dice:
+
+- **Fraude** — espectadores artificiales, deepfakes, saltarse captchas, apuestas. Los vetos están
+  en español y en inglés, porque la mitad de los anuncios vienen en inglés.
+- **Fuera de tu terreno** — PLC, SAP, Revit, 3D, WordPress, diseño gráfico, redacción…
+- **Dinero** — se calcula **cuántas horas te paga el tope del presupuesto a tu tarifa**
+  (18 €/h netos). No se estima cuánto cuesta el encargo: en el listado la descripción llega
+  recortada a 300 caracteres y cualquier estimación de horas salida de ahí es un número inventado.
+
+De 90 proyectos abiertos suelen pasar unos 23. Cada tarjeta dice **Apta · 69/100** y por qué.
+
+Dos vistas: **Oportunidades** y **Propuestas enviadas** (guarda el texto entero de lo que
+prometiste; dentro de un mes es la única forma de saberlo). Los presupuestos llegan en seis
+monedas y se convierten a **€ o $** para poder compararlos, con el original en el tooltip.
+
+**Piloto automático.** Con **Start** manda una propuesta al día, sola: elige la mejor con cupo,
+la redacta, abre la página de la puja, la rellena, le da a enviar, comprueba que entró y te manda
+un correo con el proyecto, el importe, los días y el enlace. Una al día y no más, porque con 8
+pujas al mes gastarlas de golpe deja la semana siguiente a cero, y los dos sitios penalizan pujar
+en masa.
+
+**La prueba de que una puja entró es el contador del propio sitio**, no el texto de la página.
+Un `click()` devuelve «pulsado» aunque el formulario no valide. Por fiarse del texto se dio por
+enviada una propuesta que Workana nunca recibió.
+
+**El navegador.** Una página servida en `localhost` no puede escribir en un formulario de
+`workana.com`: el navegador prohíbe el acceso entre orígenes. Hay dos caminos y con uno basta:
+
+1. **«Abrir el navegador del panel»** — arranca un Chrome aparte con su propio perfil en
+   `~/.cvtailor-chrome` y lo conduce por el protocolo de DevTools (`cdp.mjs`). No toca tu Chrome.
+   Hay que iniciar sesión una vez en cada sitio. *Workana aguanta; Freelancer.es tira la sesión
+   al rato.*
+2. **Tu Chrome de siempre** — activando **Ver › Desarrollador › Permitir JavaScript desde Apple
+   Events**. Usa las sesiones que ya tienes, que son estables. Es el camino bueno para
+   Freelancer.es.
+
 ### La foto
 En el editor, dentro de **Resumen y foto**, puedes cambiarla: eliges el archivo y el programa la
 deja cuadrada, en sRGB y a 900×900 (una de 2700×3600 y 780 KB sale a 107 KB). Si la foto es
@@ -116,9 +160,43 @@ Workday, SAP SuccessFactors). Para enviar por email a una persona, usa la versi�
 | `ajustes.json` | Qué perfil tienes activo. |
 | `cv_base.json` | El CV original. Ya solo sirve de copia de seguridad. |
 | `servidor.py` | El programa. |
+| `cdp.mjs` | Conduce el navegador del panel para rellenar y enviar las pujas. |
 | `web/` | La interfaz. |
-| `datos/` | Tus fotos (cuadrada y 3:4). |
-| `salidas/` | Cada candidatura guardada, con sus PDF. |
+| `datos/` | Tus fotos, y los datos del freelance: `workana.json` (proyectos recogidos), `enviadas.json` (pujas mandadas) y `auto.json` (piloto, cupo y diario). |
+| `salidas/` | Cada candidatura guardada, con sus PDF, y `capturas/` para las propuestas. |
+
+## Dos cosas que conviene saber
+
+**El perfil activo manda.** Sin `ajustes.json` el programa usa `cv_base.json`, que puede no ser
+el perfil que quieres exportar. Actívalo antes de generar el PDF.
+
+**El ajuste a dos páginas recorta las aptitudes por orden de lista**, no por relevancia: deja las
+primeras 30. Si añades una al final de la lista, no saldrá impresa. Por eso las listas van
+ordenadas a propósito, con el stack delante. Para comprobarlo, lee el PDF de vuelta en vez de
+mirar el JSON.
+
+**El envío de pujas en Freelancer.es** necesita activar en Chrome *Ver › Desarrollador › Permitir
+JavaScript desde Apple Events*; con el navegador aparte del panel la sesión no aguanta. En
+Workana funciona por los dos caminos.
+
+## Siete fallos corregidos, por si reaparecen
+
+1. Se pulsaba `button[type=submit]`, que en Workana es el **«No, cancelar»** de un modal oculto.
+   El bueno es un `input` con valor «Enviar presupuesto». Ahora se busca por texto y tiene que verse.
+2. Se daba por enviada una puja buscando «Tu propuesta» en la página… que es la etiqueta del
+   propio formulario. Falso positivo seguro. Ahora decide el contador del sitio.
+3. El aviso por correo colgaba la petición entera y se perdía el resultado. Tope de 25 s y la
+   tanda va en segundo plano.
+4. Leer el contador **después** de rellenar navegaba la pestaña fuera del formulario y el envío
+   salía «VACIO». Se lee antes.
+5. Las URLs de Freelancer.es no llevaban el ID del proyecto: la ficha cargaba y el formulario no.
+6. Esperas de tiempo fijo. Workana pasa por Cloudflare y Freelancer es una SPA. Ahora se espera
+   **al elemento**, con el tiempo solo como tope.
+7. `cdp_vivo()` daba el navegador por muerto con 2 s de margen mientras Chrome pintaba.
+
+**Y uno de antes:** la edad de los proyectos de Workana estaba congelada en el momento de la
+recogida, así que uno de hace cuatro días seguía diciendo «Hace 1 hora» y el filtro de 24 h no
+descartaba nada. Ahora se suma lo que ha pasado desde la cosecha.
 
 ## Si algo falla
 

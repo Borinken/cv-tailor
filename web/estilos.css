@@ -193,6 +193,8 @@ input:focus,textarea:focus,select:focus{outline:2px solid #c7d7f0;border-color:v
 .etq.fuente.linkedin{background:#e8f0fb;color:#0a66c2}
 .etq.fuente.tecnoempleo{background:#e6f5f4;color:#0f6e68}
 .etq.fuente.infojobs{background:#fdeee3;color:#c2410c}
+.etq.fuente.michael.page,.etq.fuente.michael{background:#efe9fb;color:#5b21b6}
+.etq.sueldo{background:#dcfce7;color:#166534}
 .oferta .botones{display:flex;gap:7px;margin-top:9px}
 .oferta .botones .btn-mini{padding:5px 12px;font-weight:600}
 .oferta:hover .botones .btn-mini{border-color:#c7d7f0;color:var(--tinta)}
@@ -276,3 +278,156 @@ input:focus,textarea:focus,select:focus{outline:2px solid #c7d7f0;border-color:v
 .senales b{display:block;font-size:12.5px;color:#92400e;margin-bottom:6px}
 .senales.limpio b{color:var(--ok);margin:0}
 .senal{display:block;font-size:12px;color:#78350f;margin-bottom:3px}
+
+/* aviso de que el PDF se apretó para caber en dos páginas */
+.aviso-encaje{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+  max-width:min(640px,92vw);background:#1F2937;color:#F3F4F6;font-size:13px;line-height:1.45;
+  padding:11px 16px;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.28);z-index:60}
+
+/* interruptor de cada proyecto: encendido = sale en el CV */
+.interruptor{display:flex;align-items:center;gap:6px;margin-left:auto;margin-right:8px;
+  font-size:12px;color:var(--gris);cursor:pointer;user-select:none}
+.interruptor input{accent-color:var(--azul);width:15px;height:15px;cursor:pointer}
+.ficha.apagada{opacity:.5}
+.ficha.apagada .cabeza b{text-decoration:line-through}
+label .ayuda{display:block;margin-top:3px;font-size:11.5px;color:var(--gris)}
+.nota-seccion{margin:0 0 10px;font-size:12.5px;color:var(--gris);line-height:1.45}
+.btn-mini.peligro{color:var(--mal);border-color:#F3C9C9}
+.btn-mini.peligro:hover{background:#FDECEC}
+
+/* ---------------------------------------------- sugeridas por Claude */
+.bloque-recomendadas{border-color:#dbe6f6;background:linear-gradient(180deg,#f7faff 0,#fff 90px)}
+.bloque-recomendadas .cabeza-seccion h3{margin-bottom:2px}
+.bloque-recomendadas .cabeza-seccion .ayuda{margin:0}
+#reco-nota{margin:8px 0 0}
+.recomendadas{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px;margin-top:14px}
+.reco{position:relative;display:flex;flex-direction:column;gap:9px;border:1px solid var(--linea);
+  border-radius:14px;padding:15px 15px 13px;background:#fff;transition:.15s;border-left-width:4px}
+.reco.nv-alto{border-left-color:#16a34a}
+.reco.nv-medio{border-left-color:#d97706}
+.reco.nv-bajo{border-left-color:#94a3b8}
+.reco:hover{box-shadow:0 10px 26px rgba(15,23,42,.09);transform:translateY(-2px)}
+.reco.usada{background:#f8fafc}
+.reco > .alto{display:flex;gap:11px;align-items:flex-start}
+.reco .cuerpo{flex:1;min-width:0}
+.reco .tit{font-weight:700;font-size:14px;line-height:1.3}
+.reco .emp{font-size:12.5px;color:#475569;margin-top:1px}
+.reco .prio{display:inline-block;margin-top:6px;font-size:10.5px;font-weight:700;letter-spacing:.02em;
+  text-transform:uppercase;color:#64748b}
+.reco.nv-alto .prio{color:#15803d}
+.reco.nv-medio .prio{color:#b45309}
+.reco.usada .prio{color:var(--azul)}
+.logo-fuente{width:34px;height:34px;flex:none;display:block}
+.logo-fuente svg{width:100%;height:100%;display:block}
+.anillo{--pct:0;--c:#94a3b8;flex:none;width:58px;height:58px;border-radius:50%;display:grid;
+  place-content:center;text-align:center;line-height:1;
+  background:radial-gradient(closest-side,#fff 78%,transparent 80% 100%),
+    conic-gradient(var(--c) calc(var(--pct)*1%),#e8edf3 0)}
+.anillo.nv-alto{--c:#16a34a}
+.anillo.nv-medio{--c:#d97706}
+.anillo b{font-size:15px;color:var(--tinta)}
+.anillo small{font-size:9px;color:var(--gris);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+.reco .meta{display:flex;gap:6px;flex-wrap:wrap}
+.etq.modo{background:#eef6ff;color:#1d4ed8}
+.etq.dinero{background:#ecfdf3;color:#15803d}
+.reco .motivo{margin:0;font-size:12.6px;color:#334155;line-height:1.45}
+.reco .botones{display:flex;gap:8px;margin-top:auto;padding-top:3px}
+.reco .botones .btn-mini{padding:7px 12px;font-size:12.5px;font-weight:600;border-radius:8px;
+  text-decoration:none;text-align:center}
+.reco .botones .adaptar{flex:1;background:var(--azul);border-color:var(--azul);color:#fff}
+.reco .botones .adaptar:hover{filter:brightness(1.07);color:#fff}
+.reco .botones .abrir{color:var(--tinta)}
+.reco .botones .abrir:hover{border-color:#c7d7f0}
+@media (max-width:520px){.recomendadas{grid-template-columns:1fr}}
+
+/* ya vistas / enviadas / descartadas: para no repetir ofertas */
+.filtros-reco{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.marcas{display:flex;gap:6px;border-top:1px dashed var(--linea);padding-top:9px}
+.marca-btn{flex:1;border:1px solid var(--linea);background:#fff;border-radius:7px;padding:5px 6px;
+  font-size:11.5px;color:var(--gris);cursor:pointer;white-space:nowrap}
+.marca-btn:hover{border-color:#c7d7f0;color:var(--tinta)}
+.marca-btn.m-vista.activa{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;font-weight:600}
+.marca-btn.m-enviada.activa{background:#ecfdf5;border-color:#6ee7b7;color:#047857;font-weight:600}
+.marca-btn.m-descartada.activa{background:#f1f5f9;border-color:#cbd5e1;color:#475569;font-weight:600}
+.sello{align-self:flex-start;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.01em}
+.sello.s-vista{background:#eff6ff;color:#1d4ed8}
+.sello.s-enviada{background:#d1fae5;color:#047857}
+.sello.s-descartada{background:#f1f5f9;color:#64748b}
+.reco.est-vista{background:#fbfdff}
+.reco.est-enviada{background:#f6fdf9;border-left-color:#10b981}
+.reco.est-descartada{opacity:.65}
+.oferta .sello{margin-bottom:6px}
+.oferta .btn-mini.activa{background:#ecfdf5;border-color:#6ee7b7}
+
+/* cuánta competencia tiene la oferta */
+.etq.gente{background:#FFF3E0;color:#8A5A00;border-color:#FFE0A3}
+.etq.gente.poca{background:#E8F6EC;color:#1D6B36;border-color:#BFE6CC}
+.etq.modo{background:#EEF2FF;color:#3A4A8C;border-color:#D4DCFA}
+.etq.modo.remoto{background:#E8F6EC;color:#1D6B36;border-color:#BFE6CC}
+.etq.hora{background:#F5F6F8;color:#5b6472;border-color:#E3E6EC;font-variant-numeric:tabular-nums}
+#bu-pais{border:1px solid var(--borde);border-radius:9px;padding:7px 9px;font-size:13px;
+  background:#fff;color:var(--texto);cursor:pointer}
+
+/* --- Workana: proyectos freelance y su propuesta --- */
+.bloque-workana .oferta .tit{font-size:13.5px}
+.etq.sueldo{background:#dcfce7;color:#166534}
+.recorte{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  margin:6px 0 0;line-height:1.45}
+.modal-fondo{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;
+  align-items:center;justify-content:center;z-index:999;padding:20px}
+.modal-caja{background:#fff;border-radius:14px;padding:20px 22px;max-width:620px;width:100%;
+  max-height:86vh;overflow:auto;box-shadow:0 18px 50px rgba(15,23,42,.3)}
+.modal-caja h3{margin:0 0 4px;font-size:16px}
+.cajon-propuesta{width:100%;min-height:260px;margin:10px 0 4px;padding:12px 14px;
+  border:1px solid #cbd5e1;border-radius:10px;font:inherit;line-height:1.55;resize:vertical}
+
+/* --- Freelance: pestaña propia y rejilla densa (pidió menos scroll) --- */
+#freelance .ofertas{grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+#freelance .oferta{padding:11px 13px}
+#freelance .oferta .tit{font-size:13px;line-height:1.3}
+#freelance .oferta .alto{margin-bottom:6px}
+#freelance .meta{gap:4px;margin:4px 0}
+#freelance .meta.skills .etq{font-size:9.5px;padding:1.5px 7px}
+#freelance .recorte{-webkit-line-clamp:2;font-size:11.5px;margin:4px 0 0}
+#freelance .botones{margin-top:8px;gap:5px}
+#freelance .panel-cab{margin-bottom:10px}
+#freelance .panel-cab h1{margin-bottom:2px}
+.bloque-workana .cabeza-seccion{align-items:flex-start}
+/* la fila de filtros de Workana en una sola línea, sin ocupar alto de más */
+.bloque-workana .filtros-reco{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+#wk-texto{max-width:15em;padding:5px 10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;font-size:12px}
+/* el paso que queda tras abrir Workana: sin esto la oferta se abre vacía y
+   parece que el botón no ha hecho nada */
+.siguiente-paso{margin-top:12px;padding:12px 14px;border-radius:10px;
+  background:#eff6ff;border:1px solid #bfdbfe;font-size:12.5px;line-height:1.5}
+.siguiente-paso ol{margin:6px 0 6px 18px;padding:0}
+.siguiente-paso li{margin:3px 0}
+.chips-fuente .chip-w{border:1px solid #cbd5e1;background:#fff;color:#64748b;border-radius:999px;
+  padding:4px 12px;font-size:11.5px;font-weight:600;cursor:pointer;margin-right:6px}
+.chips-fuente .chip-w.activa{border-color:#2563eb;color:#1d4ed8;background:#eff6ff}
+.chips-fuente .chip-w.activa::before{content:"✓ "}
+.etq.fuente.workana{background:#efe9fb;color:#5b21b6}
+.etq.fuente.freelancer{background:#e8f4fd;color:#0b63a5}
+.etq.fuente.freelancermap{background:#fdf0e6;color:#b45309}
+
+/* Contador de la propuesta cuando se pasa del limite del sitio. */
+.ayuda.mal{color:#b91c1c;font-weight:600}
+
+/* Veredicto del filtro en cada tarjeta. */
+.veredicto{margin:.5rem 0 .2rem;font-size:.82rem;line-height:1.35;padding:.45rem .6rem;border-radius:8px}
+.veredicto.ok{background:#eafaf0;color:#14532d}
+.veredicto.no{background:#f6f7f9;color:#64748b}
+.oferta.apta{border-left:3px solid #16a34a}
+.etq.fuente.grande{margin-top:.3rem;display:inline-block;font-weight:700}
+.bloque-auto{border:1px solid #d8e2f2;background:#f8fbff}
+
+/* Cabecera del piloto: el titulo a la izquierda y los botones a la derecha, a
+   la misma altura. Antes el texto del cupo iba metido entre los dos botones y
+   su linea base no cuadraba con ellos. */
+.bloque-auto .cabeza-seccion{align-items:center;justify-content:space-between}
+.bloque-auto .filtros-reco{align-items:center;gap:10px}
+.bloque-auto .btn{min-height:34px;display:inline-flex;align-items:center}
+.bloque-auto .btn-mini{min-height:34px;display:inline-flex;align-items:center}
+.cupo-fila{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin-top:4px;padding-top:10px;border-top:1px solid #e6edf7}
+.cupo-fila .ayuda{margin:0}

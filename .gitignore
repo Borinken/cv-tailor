@@ -12,3 +12,8 @@ __pycache__/
 *.bak_*
 .DS_Store
 .remember/
+
+# Contexto de trabajo con Claude: lleva cifras y estado personal
+CLAUDE.md
+web/_medida.html
+.claude/
