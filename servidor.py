@@ -3779,15 +3779,18 @@ class Handler(BaseHTTPRequestHandler):
         return self._envia(404, "no encontrado", "text/plain; charset=utf-8")
 
     def _mismo_sitio(self):
-        """Origin de otra pagina = peticion de otra web, no del panel."""
+        """Origin de otra pagina = peticion de otra web, no del panel.
+
+        Se compara el origen ENTERO, con esquema y puerto. Mirar solo el host
+        dejaba entrar a cualquier otra cosa servida en localhost, que es
+        justo donde corren los cacharros de desarrollo."""
         o = self.headers.get("Origin")
         if not o:
             return True
-        try:
-            h = urllib.parse.urlsplit(o).hostname
-        except Exception:
-            return False
-        return h in ("127.0.0.1", "localhost", "::1")
+        permitidos = {"http://127.0.0.1:%d" % PUERTO,
+                      "http://localhost:%d" % PUERTO,
+                      "http://[::1]:%d" % PUERTO}
+        return o.rstrip("/") in permitidos
 
     def do_POST(self):
         if not self._mismo_sitio():
