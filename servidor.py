@@ -379,6 +379,14 @@ def _educacion(cv):
 
 
 def _conocimientos(cv):
+    # Con `conocimientos_grupos` las aptitudes salen en lineas por familia
+    # (IA generativa / ML / produccion): un reclutador de IA busca esa
+    # estructura, no una nube de etiquetas. Sin grupos, las etiquetas de siempre.
+    grupos = [g for g in cv.get("conocimientos_grupos", []) if g.get("items")]
+    if grupos:
+        return '<div class="skills">%s</div>' % "".join(
+            '<div class="skill-grupo"><b>%s:</b> %s</div>'
+            % (e(g.get("grupo")), e(" · ".join(str(i) for i in g["items"]))) for g in grupos)
     chips = "".join('<span class="chip">%s</span>' % e(c) for c in cv.get("conocimientos", []) if str(c).strip())
     return '<div class="chips">%s</div>' % chips if chips else ""
 
@@ -427,17 +435,28 @@ def _idiomas(cv):
 
 
 def _certificados(cv):
-    """Una linea por certificado: titulo, entidad y fecha en el mismo renglon.
+    """Los certificados de un mismo emisor y año se agrupan en un solo renglon.
 
-    En tres lineas cada uno, cuatro certificados se comian medio tercio de la
-    segunda pagina y empujaban proyectos fuera del CV. El contenido es el
-    mismo y se extrae igual de bien; lo que cambia es que ocupa lo que vale.
-    """
-    filas = []
+    Con 19 certificados, una linea por cada uno empujaba los proyectos fuera
+    del CV (el encaje los resumia a una frase). Agrupados por emisor y año
+    ocupan una cuarta parte y el contenido, que es lo que lee un ATS, es el mismo."""
+    grupos = []
     for x in cv.get("certificados", []):
-        meta = " · ".join(t for t in [e(x.get("entidad")), e(x.get("fecha"))] if t)
-        filas.append('<div class="cert-linea"><b>%s</b>%s</div>'
-                     % (e(x.get("titulo")), (" — <span>%s</span>" % meta) if meta else ""))
+        clave = (x.get("entidad") or "", x.get("fecha") or "")
+        if grupos and grupos[-1][0] == clave:
+            grupos[-1][1].append(x)
+        else:
+            grupos.append((clave, [x]))
+    filas = []
+    for (ent, fec), xs in grupos:
+        meta = " · ".join(t for t in [e(ent), e(fec)] if t)
+        if len(xs) >= 3:
+            filas.append('<div class="cert-linea"><b>%s</b> — %s</div>'
+                         % (meta, " · ".join(e(x.get("titulo")) for x in xs)))
+        else:
+            for x in xs:
+                filas.append('<div class="cert-linea"><b>%s</b>%s</div>'
+                             % (e(x.get("titulo")), (" — <span>%s</span>" % meta) if meta else ""))
     return '<div class="certs">%s</div>' % "".join(filas) if filas else ""
 
 
@@ -501,6 +520,9 @@ a { color:inherit; text-decoration:underline; }
 .cabecera { padding:%(cab_t).2fmm 13mm %(cab_b).2fmm; display:flex; gap:8mm; align-items:flex-start; }
 .cabecera img { width:%(foto).2fmm; height:%(foto).2fmm; object-fit:cover; border-radius:3mm; flex:none; }
 .cabecera h1 { margin:0 0 %(h1_b).2fmm; font-size:%(h).1fpt; font-weight:500; letter-spacing:.2px; }
+.cabecera .resumen-linea { margin:0 0 .9mm; font-style:normal; }
+.cabecera .resumen-linea b { font-weight:700; }
+.cabecera .titular { margin:0 0 1.4mm; font-style:normal; font-weight:600; font-size:%(s).2fpt; }
 .cabecera .resumen { margin:0; font-style:italic; font-size:%(s).2fpt; line-height:%(lh).3f; }
 .contacto { padding:0 13mm %(cont_b).2fmm; display:grid; grid-template-columns:1fr 1fr; gap:1mm 8mm; }
 .contacto .ci { display:flex; align-items:center; gap:2.5mm; margin-bottom:%(cont_fila).2fmm; font-size:%(s).2fpt; }
@@ -535,6 +557,7 @@ a { color:inherit; text-decoration:underline; }
 .cert .bmeta { color:#374151; } .cert .bmeta em { color:%(c)s; }
 .certs { display:flex; flex-direction:column; gap:%(cert_g).2fmm; }
 .cert-linea { line-height:%(lh).3f; }
+.skill-grupo { line-height:%(lh).3f; margin:0 0 1mm; }
 .cert-linea span { color:#5b6472; font-style:italic; }
 """ % v
 
@@ -617,6 +640,23 @@ CSS_ATS = """
 """
 
 
+def _resumen_html(texto):
+    """El resumen en varias lineas se lee como una ficha: cada linea con su
+    etiqueta en negrita ("En produccion: ...") para que quien criba encuentre
+    lo que busca sin leer un parrafo. Una sola linea sale como siempre."""
+    lineas = [l.strip() for l in str(texto or "").split("\n") if l.strip()]
+    if len(lineas) <= 1:
+        return e(texto)
+    filas = []
+    for l in lineas:
+        etiqueta, sep, resto = l.partition(":")
+        if sep and 0 < len(etiqueta) <= 26 and resto.strip():
+            filas.append('<div class="resumen-linea"><b>%s:</b> %s</div>' % (e(etiqueta), e(resto.strip())))
+        else:
+            filas.append('<div class="resumen-linea">%s</div>' % e(l))
+    return "".join(filas)
+
+
 def _cuerpo_cv(cv):
     est = cv.get("estilo", {})
     color = est.get("color", "#4A76B8")
@@ -635,11 +675,15 @@ def _cuerpo_cv(cv):
             continue
         es, en, fn = SECCIONES[k]
         cuerpo += _seccion(en if cv.get("idioma") == "en" else es, fn(cv))
+    # El titular va justo bajo el nombre: es lo primero que lee quien criba.
+    # Antes solo salia en la carta y el CV arrancaba directamente con un parrafo.
+    tit = cv.get("titular") or idn.get("titular")
+    titular = '<p class="titular">%s</p>' % e(tit) if tit else ""
     return """<div class="hoja">
-  <div class="cabecera">%s<div><h1>%s</h1><p class="resumen">%s</p></div></div>
+  <div class="cabecera">%s<div><h1>%s</h1>%s<div class="resumen">%s</div></div></div>
   %s
   <div class="cuerpo">%s</div>
-</div>""" % (foto, e(idn.get("nombre")), e(cv.get("resumen")), _contacto(idn), cuerpo)
+</div>""" % (foto, e(idn.get("nombre")), titular, _resumen_html(cv.get("resumen")), _contacto(idn), cuerpo)
 
 
 def _hojas_estilo(cv, extra=""):
@@ -1684,13 +1728,9 @@ def _buscar_freelancer_es(texto, dias):
         moneda = (p.get("currency") or {}).get("code", "")
         fuera.append({
             "titulo": p.get("title", ""),
-            # Con el id al final. El `seo_url` de su API viene sin el, y sin id
-            # la ficha carga pero el formulario de la puja no aparece: la tanda
-            # moria diciendo "esa pagina no tiene formulario".
-            "url": ("https://www.freelancer.es/projects/%s-%s"
-                    % ((p.get("seo_url") or "").rstrip("/"), p.get("id"))
-                    if p.get("id") else
-                    "https://www.freelancer.es/projects/" + (p.get("seo_url") or "")),
+            # SIN el id: Freelancer responde 404 a /projects/<seo_url>-<id>.
+            # La ficha real es solo el seo_url (comprobado con curl el 3-nov).
+            "url": "https://www.freelancer.es/projects/" + (p.get("seo_url") or "").strip("/"),
             "publicado": datetime.datetime.fromtimestamp(
                 creado, datetime.timezone.utc).isoformat(timespec="seconds"),
             "presupuesto": ("%g - %g %s" % (pre.get("minimum") or 0, pre.get("maximum") or 0, moneda)
@@ -1883,6 +1923,18 @@ def cargar_freelance(texto="", dias=14):
                 proyectos.append(p)
         except Exception as ex:
             errores.append("%s: %s" % (nombre, ex))
+    # Lo que no existe no se muestra: se comprueba la ficha de cada proyecto
+    # de los sitios que se leen en vivo (en paralelo, con cache de 10 min).
+    # Workana va por otro camino (cosecha) porque Cloudflare bloquea el curl.
+    comprobar = [p for p in proyectos if p.get("fuente") != "Workana"]
+    if comprobar:
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(8) as ex:
+            vivos = set(p["url"] for p, ok in zip(comprobar, ex.map(
+                lambda q: _proyecto_existe(q["url"]), comprobar)) if ok)
+        descartados = len(comprobar) - len(vivos)
+        proyectos = [p for p in proyectos if p.get("fuente") == "Workana" or p["url"] in vivos]
+        guardado["inexistentes"] = descartados
     proyectos.sort(key=lambda x: (x.get("horas") if x.get("horas") is not None else 9999))
     guardado["proyectos"] = proyectos
     guardado["errores"] = errores
@@ -2623,13 +2675,31 @@ def _anotar_auto(texto, envio=None):
     return guardar_auto(datos)
 
 
-def candidatas(texto="", suelo_hora=18.0):
-    """Los proyectos abiertos que pasan el filtro, mejor primero, ya evaluados."""
-    proyectos = cargar_freelance(texto, 14).get("proyectos", [])
+AUTO_MAX_HORAS = 48          # mas viejo que esto ya tiene la competencia hecha
+AUTO_COSECHA_MAX_HORAS = 6   # Workana: una cosecha mas vieja no prueba que siga abierto
+
+
+def candidatas(texto="", suelo_hora=18.0, max_horas=None):
+    """Los proyectos abiertos y RECIENTES que pasan el filtro, mejor primero.
+
+    'Vigente' en Workana solo significa que salia en la ultima cosecha; si esa
+    cosecha es de ayer, no prueba nada. Sin fecha o por encima de max_horas no
+    se puja: es mejor no mandar que mandar a algo cerrado."""
+    if max_horas is None:
+        max_horas = cargar_auto().get("max_horas", AUTO_MAX_HORAS)
+    guardado = cargar_freelance(texto, 14)
+    proyectos = guardado.get("proyectos", [])
+    edad_cosecha = _horas_desde(guardado.get("actualizado")) if guardado.get("actualizado") else None
+    cosecha_fresca = edad_cosecha is not None and edad_cosecha <= AUTO_COSECHA_MAX_HORAS
     ya = {e.get("url") for e in cargar_enviadas().get("envios", [])}
     salida = []
     for p in proyectos:
         if not p.get("vigente") or p.get("url") in ya:
+            continue
+        h = p.get("horas")
+        if not isinstance(h, (int, float)) or h > max_horas:
+            continue
+        if p.get("fuente") == "Workana" and not cosecha_fresca:
             continue
         v = evaluar_proyecto(p, suelo_hora=suelo_hora)
         p = dict(p)
@@ -2637,6 +2707,25 @@ def candidatas(texto="", suelo_hora=18.0):
         salida.append(p)
     salida.sort(key=lambda x: (not x["veredicto"]["apto"], -x["veredicto"]["nota"]))
     return salida
+
+
+_EXISTE = {}   # url -> (momento, bool)
+
+
+def _proyecto_existe(url):
+    """True solo si la ficha responde 200. Un 404 o un fallo de red = no existe
+    para el panel: es mejor no mostrar que rellenar un proyecto fantasma."""
+    t = _EXISTE.get(url)
+    if t and time.time() - t[0] < 600:
+        return t[1]
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            ok = r.status == 200
+    except Exception:
+        ok = False
+    _EXISTE[url] = (time.time(), ok)
+    return ok
 
 
 def tanda_automatica():
@@ -2694,6 +2783,10 @@ def tanda_automatica():
                 % (len(campos["texto"]), tope)}
 
     destino = _url_puja(p.get("url", ""))
+    if not _proyecto_existe(p.get("url", "")):
+        return {"hecho": False, "texto": "«%s» (%s): la ficha no existe o está cerrada "
+                "(%s). No relleno nada." % (p.get("titulo", "")[:50], p.get("fuente"),
+                                            p.get("url", ""))}
     # Se lee ahora, con el formulario aun sin abrir: despues de rellenarlo
     # no se puede, porque leerlo navega la pestana y se pierde lo escrito.
     quedaban = pujas_que_quedan(p.get("fuente", ""))

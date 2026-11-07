@@ -13,7 +13,7 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # lo que ofrece el navegador y no está definido en el fichero
 CONOCIDOS = {
-    "alert", "confirm", "prompt", "fetch", "setTimeout", "setInterval", "clearTimeout",
+    "alert", "confirm", "prompt", "fetch", "btoa", "atob", "escape", "unescape", "setTimeout", "setInterval", "clearTimeout",
     "clearInterval", "Promise", "Number", "String", "Boolean", "Array", "Object", "JSON",
     "Date", "Math", "Error", "Map", "Set", "RegExp", "URLSearchParams", "FileReader",
     "Blob", "URL", "encodeURIComponent", "decodeURIComponent", "parseFloat", "parseInt",
